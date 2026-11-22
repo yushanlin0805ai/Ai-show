@@ -1,0 +1,8 @@
+{
+  "name": "short-video-kit",
+  "private": true,
+  "description": "短影音動畫系統：渲染時需要的前端套件（GSAP）",
+  "dependencies": {
+    "gsap": "3.15.1"
+  }
+}

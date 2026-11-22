@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-Hant" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <!-- GSAP 由 prepare-composition.py 從 node_modules 複製（不走 CDN） -->
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      /* 字型：repo 內附，prepare-composition.py 複製到 fonts/ */
+      @font-face { font-family: "Noto Sans TC"; font-weight: 400; src: url("fonts/NotoSansTC-Regular.otf"); }
+      @font-face { font-family: "Noto Sans TC"; font-weight: 700; src: url("fonts/NotoSansTC-Bold.otf"); }
+      @font-face { font-family: "Noto Sans TC"; font-weight: 900; src: url("fonts/NotoSansTC-Black.otf"); }
+      @font-face { font-family: "Noto Color Emoji"; src: url("fonts/NotoColorEmoji.ttf"); }
+
+      /* 設計規範 design-system.md：1cqw = 10.8px */
+      :root {
+        --bg: #172a3a; --ink: #f4f1e8; --hi: #ffffff; --muted: #b9c7d1;
+        --r1: #e76f51; --r2: #f4a261; --r3: #e9c46a; --r4: #6c8ea4;
+        --soft: rgba(244, 241, 232, 0.1);
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+      body {
+        font-family: "Noto Sans TC", "Noto Color Emoji", sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+      #root { position: relative; width: 1080px; height: 1920px; background: var(--bg); overflow: hidden; }
+      .scene { position: absolute; inset: 0; }
+      .abs { position: absolute; }
+      .emo { font-family: "Noto Color Emoji", sans-serif; line-height: 1; }
+
+      /* 共用元件 */
+      .title { left: 65px; top: 200px; font-size: 108px; font-weight: 900; letter-spacing: 0.02em; line-height: 1.2; }
+      .pill {
+        display: inline-flex; align-items: center; gap: 12px; white-space: nowrap;
+        background: var(--hi); color: var(--bg); border-radius: 999px;
+        padding: 13px 37px; font-size: 41px; font-weight: 900; line-height: 1.2;
+      }
+      .badge {
+        width: 86px; height: 86px; border-radius: 50%; background: var(--hi); color: var(--bg);
+        display: grid; place-items: center; font-size: 64px; font-weight: 900; line-height: 1;
+      }
+      .card {
+        background: var(--soft); border-radius: 36px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+        text-align: center;
+      }
+      .footnote { left: 76px; right: 76px; text-align: center; font-size: 37px; font-weight: 700; color: var(--muted); }
+
+      /* 分級階梯（照 reference/aspartame-2b.html） */
+      .row {
+        left: 65px; width: 950px; height: 200px; border-radius: 32px;
+        display: flex; align-items: center; color: var(--bg);
+      }
+      .row .lab { width: 320px; padding-left: 43px; flex: none; }
+      .row b { display: block; font-size: 76px; font-weight: 900; line-height: 1.1; }
+      .row i { display: block; font-style: normal; font-size: 39px; font-weight: 700; margin-top: 8px; }
+      .slot { display: flex; gap: 20px; }
+      .chip {
+        width: 150px; height: 172px; border-radius: 27px; background: var(--bg); color: var(--ink);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+        font-size: 34px; font-weight: 700;
+      }
+      .chip .emo { font-size: 76px; }
+      .ring { position: absolute; inset: -17px; border: 10px solid var(--hi); border-radius: 46px; }
+
+      /* 字幕 */
+      #captions { position: absolute; left: 76px; right: 76px; top: 1375px; height: 205px; }
+      #captions p {
+        position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center;
+        text-align: center; font-size: 69px; font-weight: 700; line-height: 1.35; text-wrap: balance; opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="76.74" data-width="1080" data-height="1920">
+
+      <audio id="voice" src="%E6%96%87%E6%98%8C%E5%AE%AE.m4a"
+        data-start="0" data-duration="76.74" data-track-index="9" data-volume="1"></audio>
+
+      <!-- S1＋S2：開場標題卡，2023 IARC 疊加（0–12.31） -->
+      <section id="g1" class="clip scene" data-start="0" data-duration="12.31" data-track-index="1">
+        <h1 id="s1-title" class="abs title">代糖飲料會致癌？</h1>
+        <div id="s2-year" class="abs pill" style="left:65px;top:200px;font-size:64px;padding:14px 44px">2023</div>
+        <div id="s2-org" class="abs" style="left:65px;top:320px;font-size:50px;font-weight:700">國際癌症研究機構 IARC</div>
+        <div id="s1-chip" class="abs card" style="left:350px;top:540px;width:380px;height:440px">
+          <span class="emo" style="font-size:190px">🥤</span>
+          <span style="position:relative;height:70px;width:100%">
+            <span id="s1-lab-a" class="abs" style="inset:0;font-size:58px;font-weight:900">代糖飲料</span>
+            <span id="s1-lab-b" class="abs" style="inset:0;font-size:58px;font-weight:900;color:var(--r3)">阿斯巴甜</span>
+          </span>
+          <div id="s1-q" class="abs badge" style="right:-30px;top:-40px">?</div>
+        </div>
+        <div id="s2-stamp" class="abs" style="left:250px;top:1040px;width:580px;height:150px;border-radius:32px;background:var(--r3);color:var(--bg);display:flex;align-items:center;justify-content:center;gap:24px">
+          <b style="font-size:84px;font-weight:900">2B 類</b><span style="font-size:48px;font-weight:700">可能致癌</span>
+        </div>
+      </section>
+
+      <!-- S3：IARC 分級階梯（12.31–29.23） -->
+      <section id="g3" class="clip scene" data-start="12.31" data-duration="16.92" data-track-index="1">
+        <h1 id="s3-title" class="abs title">2B 是什麼意思？</h1>
+        <div id="row1" class="abs row" style="top:360px;background:var(--r1)">
+          <div class="lab"><b>第 1 類</b><i>確定致癌</i></div>
+          <div class="slot"><div id="c-alc" class="chip"><span class="emo">🍷</span>酒精</div></div>
+        </div>
+        <div id="row2" class="abs row" style="top:584px;background:var(--r2)">
+          <div class="lab"><b>2A</b><i>很可能致癌</i></div>
+          <div class="slot"><div id="c-meat" class="chip"><span class="emo">🥩</span>紅肉</div></div>
+        </div>
+        <div id="row3" class="abs row" style="top:808px;background:var(--r3)">
+          <div class="lab"><b>2B</b><i>可能致癌</i></div>
+          <div class="slot">
+            <div id="c-asp" class="chip"><span class="emo">🥤</span>阿斯巴甜</div>
+            <div id="c-pick" class="chip"><span class="emo">🥒</span>醃漬蔬菜</div>
+            <div id="c-phone" class="chip"><span class="emo">📱</span>手機射頻</div>
+          </div>
+          <div id="s3-ring" class="ring"></div>
+          <div id="s3-q" class="abs badge" style="right:-16px;top:-43px">?</div>
+        </div>
+        <div id="row4" class="abs row" style="top:1032px;background:var(--r4)">
+          <div class="lab"><b>第 3 類</b><i>無法分類</i></div>
+        </div>
+        <div id="s3-up" class="abs pill" style="right:120px;top:672px">▲ 更高等級</div>
+        <div id="s3-fn" class="abs footnote" style="top:1262px">分類看的是證據強度，不是風險大小</div>
+      </section>
+
+      <!-- S4＋S4b＋S5：能喝多少？（29.23–50.87） -->
+      <section id="g4" class="clip scene" data-start="29.23" data-duration="21.64" data-track-index="1">
+        <div id="s4body" class="abs" style="inset:0">
+          <h1 id="s4-title" class="abs title">能喝多少？</h1>
+          <div id="s4-w" class="abs card" style="left:120px;top:400px;width:380px;height:330px">
+            <span class="emo" style="font-size:150px">⚖️</span>
+            <span style="font-size:64px;font-weight:900">70 公斤</span>
+          </div>
+          <div id="s4-c" class="abs card" style="left:580px;top:400px;width:380px;height:330px">
+            <span class="emo" style="font-size:150px">🥤</span>
+            <span style="font-size:48px;font-weight:700">零卡可樂 1 罐</span>
+          </div>
+          <div id="s4-mg" class="abs" data-layout-allow-overlap style="left:580px;top:760px;width:380px;text-align:center">
+            <span class="pill" style="font-size:52px">≈ 200 毫克</span>
+          </div>
+          <div id="s4-n" class="abs" style="left:65px;top:870px;line-height:1.1">
+            <span style="font-size:100px;font-weight:900;color:var(--r3)">10～15 罐</span><span style="font-size:56px;font-weight:700">／天</span>
+          </div>
+          <div id="s4-bar" class="abs" style="left:65px;top:1010px;width:950px;height:130px;border-radius:30px;background:var(--soft);display:flex;align-items:center;padding:0 12px">
+            <span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span><span class="can emo" style="font-size:54px;width:61px;text-align:center">🥤</span>
+          </div>
+          <div id="s4-adi" class="abs" style="left:1003px;top:975px;width:10px;height:200px;border-radius:5px;background:var(--hi)"></div>
+          <div id="s4-adilab" class="abs pill" style="right:65px;top:1190px;font-size:38px">每日可接受攝取量（ADI）</div>
+          <div id="s4b" class="abs pill" style="right:65px;top:1268px;font-size:40px;background:var(--r4);color:var(--bg)">
+            安全參考值<span id="s4b-not">≠ 致癌線</span>
+          </div>
+        </div>
+        <div id="s5-card" class="abs" data-layout-allow-occlusion style="left:140px;top:560px;width:800px;height:440px;border-radius:40px;background:var(--ink);color:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+          <span style="font-size:50px;font-weight:700"><span class="emo">📄</span> 研究發現</span>
+          <span data-layout-allow-overlap style="font-size:72px;font-weight:900;line-height:1.25;text-align:center">常吃代糖的人<br />癌症風險較高</span>
+          <div id="s5-q" class="abs badge" style="right:-30px;top:-40px">?</div>
+        </div>
+      </section>
+
+      <!-- S6：是代糖造成的嗎？（50.87–64.11） -->
+      <section id="g6" class="clip scene" data-start="50.87" data-duration="13.24" data-track-index="1">
+        <h1 id="s6-title" class="abs title">是代糖造成的嗎？</h1>
+        <div id="s6-a" class="abs card" style="left:65px;top:380px;width:300px;height:300px">
+          <span class="emo" style="font-size:120px">🥤</span><span style="font-size:46px;font-weight:900">常喝代糖</span>
+        </div>
+        <div id="s6-b" class="abs card" style="left:715px;top:380px;width:300px;height:300px">
+          <span class="emo" style="font-size:120px">🩺</span><span style="font-size:46px;font-weight:900">癌症風險</span>
+        </div>
+        <div id="s6-arrow" class="abs" style="left:385px;top:510px;width:310px;height:40px">
+          <div class="abs" style="left:0;right:30px;top:16px;border-top:8px dashed var(--ink)"></div>
+          <div class="abs" style="right:0;top:0;width:0;height:0;border-top:20px solid transparent;border-bottom:20px solid transparent;border-left:34px solid var(--ink)"></div>
+        </div>
+        <div id="s6-not" class="abs pill" style="left:370px;top:580px;width:340px;justify-content:center;font-size:44px">不能直接認定</div>
+        <div id="f1" class="abs row" style="top:800px;width:600px;height:120px;border-radius:26px;background:var(--r1);padding-left:36px;gap:20px">
+          <span class="emo" style="font-size:64px">🍟</span><b style="font-size:52px">加工食品</b>
+        </div>
+        <div id="f2" class="abs row" style="top:940px;width:600px;height:120px;border-radius:26px;background:var(--r2);padding-left:36px;gap:20px">
+          <span class="emo" style="font-size:64px">🧃</span><b style="font-size:52px">含糖飲料</b>
+        </div>
+        <div id="f3" class="abs row" style="top:1080px;width:600px;height:120px;border-radius:26px;background:var(--r3);padding-left:36px;gap:20px">
+          <span class="emo" style="font-size:64px">⚖️</span><b style="font-size:52px">體重問題</b>
+        </div>
+        <svg class="abs" style="left:0;top:0" width="1080" height="1920" viewBox="0 0 1080 1920">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#f4f1e8" />
+            </marker>
+          </defs>
+          <line id="l1" x1="680" y1="860" x2="845" y2="700" stroke="#f4f1e8" stroke-width="8" stroke-linecap="round" marker-end="url(#ah)" />
+          <line id="l2" x1="680" y1="1000" x2="865" y2="705" stroke="#f4f1e8" stroke-width="8" stroke-linecap="round" marker-end="url(#ah)" />
+          <line id="l3" x1="680" y1="1140" x2="885" y2="710" stroke="#f4f1e8" stroke-width="8" stroke-linecap="round" marker-end="url(#ah)" />
+        </svg>
+      </section>
+
+      <!-- S7：偶爾 OK、白開水為主（64.11–68.81） -->
+      <section id="g7" class="clip scene" data-start="64.11" data-duration="4.70" data-track-index="1">
+        <div id="s7-a" class="abs card" style="left:95px;top:560px;width:380px;height:360px">
+          <span class="emo" style="font-size:130px">🥤</span><span style="font-size:56px;font-weight:900">偶爾 OK</span>
+        </div>
+        <div id="s7-b" class="abs card" style="left:525px;top:500px;width:460px;height:480px">
+          <span class="emo" style="font-size:160px">💧</span>
+          <span style="font-size:46px;font-weight:700;line-height:1.2">平常以</span>
+          <span style="font-size:68px;font-weight:900;line-height:1.1;color:var(--r3)">白開水為主</span>
+          <div id="s7-ring" class="ring" style="border-radius:50px"></div>
+        </div>
+      </section>
+
+      <!-- S8：結尾 CTA（68.81–76.74）；文字由 project.json 填入 -->
+      <section id="g8" class="clip scene" data-start="68.81" data-duration="7.93" data-track-index="1">
+        <div id="s8-name" class="abs" style="left:0;right:0;top:250px;text-align:center"><span class="pill" style="font-size:48px">○○老師</span></div>
+        <div id="s8-q" class="abs" data-cta="question" style="left:65px;right:65px;top:400px;text-align:center;font-size:88px;font-weight:900;line-height:1.3;text-wrap:balance">想知道自己的卡點在哪裡嗎？</div>
+        <div id="s8-card" class="abs" style="left:110px;top:720px;width:860px;height:380px;border-radius:48px;background:var(--hi);color:var(--bg);display:flex;align-items:center;justify-content:center;gap:28px">
+          <span class="emo" style="font-size:110px">💬</span>
+          <span style="font-size:84px;font-weight:900">留言</span>
+          <span id="s8-kw" data-cta="keyword" style="display:inline-block;background:var(--r3);border-radius:40px;padding:10px 40px;font-size:130px;font-weight:900;line-height:1.15">星座</span>
+        </div>
+        <div id="s8-act" class="abs" data-cta="action-tail" style="left:65px;right:65px;top:1160px;text-align:center;font-size:60px;font-weight:700">領取免費測驗！</div>
+      </section>
+
+      <!-- 字幕（prepare-composition.py 依 transcript.srt 產生） -->
+      <!-- data-hide-from：CTA 大字出現後隱藏字幕，避免同一句話出現兩次 -->
+      <div id="captions" class="clip" data-start="0" data-duration="76.74" data-track-index="5" data-hide-from="69.81">
+        <!-- CAPTIONS:BEGIN -->
+        <p data-s="1.81" data-e="3.37">最近網路上有流傳喝</p>
+        <p data-s="3.37" data-e="4.83">代糖飲料可能會致癌</p>
+        <p data-s="4.83" data-e="5.81">這是真的嗎？</p>
+        <p data-s="5.81" data-e="8.21">2023 年，國際癌症研究機構</p>
+        <p data-s="8.21" data-e="9.81">把一種叫做「阿斯巴甜」的</p>
+        <p data-s="9.81" data-e="10.23">甜味劑</p>
+        <p data-s="10.23" data-e="12.31">列入「2B 類可能致癌物」</p>
+        <p data-s="12.31" data-e="14.43">那 2B 到底是什麼意思？</p>
+        <p data-s="14.43" data-e="14.85">簡單來說</p>
+        <p data-s="14.85" data-e="16.75">就是科學家發現了一些疑慮</p>
+        <p data-s="16.75" data-e="19.17">但目前證據還不夠確定</p>
+        <p data-s="19.17" data-e="20.83">其實像是醃漬蔬菜</p>
+        <p data-s="20.83" data-e="22.45">還有手機通訊使用的</p>
+        <p data-s="22.45" data-e="23.33">射頻電磁場</p>
+        <p data-s="23.33" data-e="24.99">也都被列在 2B 類！</p>
+        <p data-s="24.99" data-e="26.67">反而紅肉或者酒精的</p>
+        <p data-s="26.67" data-e="29.23">致癌風險分類還在更高的等級</p>
+        <p data-s="29.23" data-e="30.67">那到底能喝多少呢？</p>
+        <p data-s="30.67" data-e="32.63">以一個 70 公斤的人為例</p>
+        <p data-s="32.63" data-e="34.53">一瓶易開罐的零卡可樂</p>
+        <p data-s="34.53" data-e="36.67">大約有 200 毫克的阿斯巴甜</p>
+        <p data-s="36.67" data-e="38.71">一天大概要喝 10 到 15 罐</p>
+        <p data-s="38.71" data-e="40.67">才會超過 WHO 的</p>
+        <p data-s="40.67" data-e="42.37">每日可接受攝取量！</p>
+        <p data-s="42.37" data-e="44.67">而且這是安全攝取的參考值</p>
+        <p data-s="44.67" data-e="46.61">不是喝到這個量就會致癌</p>
+        <p data-s="46.61" data-e="47.91">那為什麼有研究發現</p>
+        <p data-s="47.91" data-e="49.13">常吃代糖的人</p>
+        <p data-s="49.13" data-e="50.87">癌症風險比較高？</p>
+        <p data-s="50.87" data-e="51.71">舉個例子</p>
+        <p data-s="51.71" data-e="53.59">有些人可能本來就比較</p>
+        <p data-s="53.59" data-e="55.91">常吃加工食品或含糖飲料</p>
+        <p data-s="55.91" data-e="57.25">或者因為體重問題</p>
+        <p data-s="57.25" data-e="58.75">才開始改喝代糖飲料</p>
+        <p data-s="58.75" data-e="61.47">這些因素也可能影響研究結果</p>
+        <p data-s="61.47" data-e="62.27">所以不能直接</p>
+        <p data-s="62.27" data-e="64.11">認定是代糖造成的</p>
+        <p data-s="64.11" data-e="66.87" style="font-size:61px">因此，偶爾喝代糖飲料不用太恐慌</p>
+        <p data-s="66.87" data-e="68.81">但平常還是以白開水為主！</p>
+        <p data-s="68.81" data-e="69.81">我是○○老師</p>
+        <p data-s="69.81" data-e="71.11">想找到自己飲食</p>
+        <p data-s="71.11" data-e="72.13">習慣的卡點嗎？</p>
+        <p data-s="72.13" data-e="72.93">留言「測驗」</p>
+        <p data-s="72.93" data-e="75.43">領取免費測驗！</p>
+        <!-- CAPTIONS:END -->
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // 動畫語彙（design-system.md 第 5 節）
+      const fadeUp = (s, t) => tl.fromTo(s, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, t);
+      const slideIn = (s, t) => tl.fromTo(s, { opacity: 0, x: -54 }, { opacity: 1, x: 0, duration: 0.45, ease: "power2.out" }, t);
+      const pop = (s, t) => tl.fromTo(s, { opacity: 0, y: -86, scale: 0.6 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2.2)" }, t);
+      const fadeIn = (s, t) => tl.fromTo(s, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "none" }, t);
+      const fadeOut = (s, t, to = 0) => tl.to(s, { opacity: to, duration: 0.35, ease: "none" }, t);
+      // 呼吸循環 1.1 秒（放大→縮回），有限次數才能任意跳秒
+      const breathe = (s, t, end, scale = 1.025) => {
+        const n = Math.max(1, Math.floor((end - t) / 1.1));
+        tl.to(s, { scale, duration: 0.55, ease: "sine.inOut", yoyo: true, repeat: n * 2 - 1 }, t);
+      };
+
+      // S1（0–5.81）
+      // 標題在第 0 格就要在畫面上（社群縮圖用第一格）
+      pop("#s1-chip", 3.37);
+      gsap.set("#s1-lab-b", { opacity: 0 });
+      pop("#s1-q", 4.99);
+      fadeOut("#s1-title", 5.6);
+      // S2（5.81–12.31）
+      fadeUp("#s2-year", 5.85);
+      fadeUp("#s2-org", 6.67);
+      fadeOut("#s1-lab-a", 9.09);
+      fadeIn("#s1-lab-b", 9.09);
+      fadeOut("#s1-q", 10.3);
+      pop("#s2-stamp", 10.57);
+
+      // S3（12.31–29.23）
+      fadeUp("#s3-title", 12.4);
+      slideIn("#row1", 13.45);
+      slideIn("#row2", 13.95);
+      slideIn("#row3", 14.45);
+      slideIn("#row4", 14.95);
+      gsap.set(["#c-alc", "#c-meat", "#c-pick", "#c-phone", "#s3-ring", "#s3-q", "#s3-up", "#s3-fn"], { opacity: 0 });
+      pop("#c-asp", 15.45);
+      fadeIn("#s3-ring", 16.25);
+      pop("#s3-q", 16.25);
+      breathe("#s3-ring", 16.6, 29.2, 1.015);
+      pop("#c-pick", 19.99);
+      pop("#c-phone", 22.45);
+      pop("#c-meat", 25.51);
+      pop("#c-alc", 26.09);
+      fadeIn("#s3-fn", 26.6);
+      fadeUp("#s3-up", 28.01);
+
+      // S4（29.23–42.37）
+      fadeUp("#s4-title", 29.3);
+      pop("#s4-w", 31.21);
+      pop("#s4-c", 34.01);
+      fadeUp("#s4-mg", 34.97);
+      fadeIn("#s4-bar", 37.5);
+      gsap.utils.toArray("#s4-bar .can").forEach((c, i) => {
+        tl.fromTo(c, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" }, 37.83 + i * 0.1);
+      });
+      fadeUp("#s4-n", 38.25);
+      tl.fromTo("#s4-adi", { opacity: 0, scaleY: 0, transformOrigin: "50% 100%" }, { opacity: 1, scaleY: 1, duration: 0.45, ease: "power2.out" }, 40.67);
+      fadeUp("#s4-adilab", 40.9);
+      // S4b（42.37–46.61）
+      gsap.set("#s4b-not", { opacity: 0 });
+      fadeUp("#s4b", 44.01);
+      fadeIn("#s4b-not", 44.67);
+      // S5（46.61–50.87）
+      fadeOut("#s4body", 46.61, 0.22);
+      pop("#s5-card", 47.45);
+      pop("#s5-q", 49.13);
+
+      // S6（50.87–64.11）
+      fadeUp("#s6-title", 50.95);
+      pop("#s6-a", 51.4);
+      pop("#s6-b", 51.85);
+      fadeIn("#s6-arrow", 52.3);
+      slideIn("#f1", 54.07);
+      slideIn("#f2", 55.11);
+      slideIn("#f3", 56.67);
+      fadeIn("#l1", 59.99);
+      fadeIn("#l2", 60.29);
+      fadeIn("#l3", 60.59);
+      fadeOut("#s6-arrow", 61.75, 0.35);
+      pop("#s6-not", 61.75);
+
+      // S7（64.11–68.81）
+      pop("#s7-a", 64.75);
+      pop("#s7-b", 66.87);
+      fadeIn("#s7-ring", 67.93);
+      breathe("#s7-ring", 67.93, 68.8, 1.03);
+
+      // S8 CTA（68.81–76.74）
+      fadeUp("#s8-name", 68.9);
+      fadeUp("#s8-q", 69.81);
+      pop("#s8-card", 72.13);
+      breathe("#s8-kw", 72.6, 76.7, 1.06);
+      fadeUp("#s8-act", 73.89);
+
+      // 字幕：每則在 data-s 出現、data-e 消失
+      const hideFrom = +document.getElementById("captions").dataset.hideFrom || Infinity;
+      document.querySelectorAll("#captions p").forEach((p) => {
+        const s = +p.dataset.s, e = Math.min(+p.dataset.e, hideFrom);
+        if (s >= hideFrom) return;
+        tl.set(p, { opacity: 1 }, s);
+        tl.set(p, { opacity: 0 }, e);
+      });
+
+      tl.set({}, {}, 76.74); // 時間軸長度＝音檔長度
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

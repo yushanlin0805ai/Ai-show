@@ -1,0 +1,35 @@
+/* zodiac 品牌（A 夜空占星）共用樣式。字型路徑相對於使用此檔的頁面。 */
+@font-face { font-family: "Noto Sans TC"; font-weight: 400; src: url("../fonts/NotoSansTC-Regular.otf"); }
+@font-face { font-family: "Noto Sans TC"; font-weight: 700; src: url("../fonts/NotoSansTC-Bold.otf"); }
+@font-face { font-family: "Noto Sans TC"; font-weight: 900; src: url("../fonts/NotoSansTC-Black.otf"); }
+@font-face { font-family: "Noto Color Emoji"; src: url("../fonts/NotoColorEmoji.ttf"); }
+:root {
+  --night: #141a3a; --night2: #232b5c; --deep: #0b0f26; --gold: #f2d27a; --ink: #f7f3ea; --mute: rgba(247, 243, 234, .72);
+  --kw: #ffb23f; /* 關鍵字：橘黃 */
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+body { font-family: "Noto Sans TC", "Noto Color Emoji", sans-serif; color: var(--ink); }
+#root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+.abs { position: absolute; }
+.emo { font-family: "Noto Color Emoji", sans-serif; line-height: 1; }
+
+/* 全螢幕插畫 B-roll 的夜空底 */
+.night-full { left: 0; top: 0; width: 1080px; height: 1920px;
+  background: radial-gradient(ellipse 120% 70% at 50% 35%, var(--night2) 0%, var(--night) 55%, var(--deep) 100%); }
+.stars { left: 0; top: 0; overflow: hidden; }
+.star { position: absolute; left: 0; top: 0; }
+
+.brand { left: 60px; top: 215px; font-size: 30px; font-weight: 700; letter-spacing: .12em; color: var(--gold); opacity: .9; }
+.title { left: 60px; right: 60px; top: 270px; font-size: 76px; font-weight: 900; line-height: 1.2; }
+.title .g { color: var(--gold); }
+.glass { background: rgba(35, 43, 92, .78); border: 2px solid rgba(242, 210, 122, .5); border-radius: 28px; }
+.tag { display: inline-block; font-size: 32px; font-weight: 700; line-height: 1; padding: 12px 18px 14px; border-radius: 999px;
+  background: rgba(242, 210, 122, .14); border: 1.5px solid rgba(242, 210, 122, .55); color: var(--ink); white-space: nowrap; }
+.tag.hot { background: rgba(255, 178, 63, .2); border-color: var(--kw); }
+
+/* 字幕：深藍半透明底，一行；關鍵字橘黃 1.75 倍 */
+.cap { left: 60px; right: 60px; top: 1390px; height: 210px; display: flex; align-items: center; justify-content: center; }
+.cap p { padding: 10px 34px 16px; border-radius: 26px; background: rgba(20, 26, 58, .82);
+  font-size: 60px; font-weight: 900; line-height: 1.2; white-space: nowrap; box-shadow: 0 0 30px rgba(20, 26, 58, .6); }
+.kw { color: var(--kw); font-size: 1.75em; vertical-align: -0.08em; }

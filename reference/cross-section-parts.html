@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>剖面零件庫</title>
+<!--
+  剖面動畫的零件庫（見 .claude/skills/broll-video/references/cross-section.md 第 1-1 節）。
+  每個零件是一個 <g id="part-…">，畫在 450×450 的座標裡，用法：
+    1. 把整個 <g> 複製到 composition 的剖面卡 SVG 裡
+    2. 外面包一層 <g transform="translate(x y) scale(s)"> 放到想要的位置與大小
+    3. 帶 class="hero" 的是「主角」（被追蹤的東西），帶 class="flow" 的是會移動的粒子，用 GSAP 動它們
+  配色照 cross-section.md 第 3 節；新零件畫好後加在這個檔案最後。
+-->
+<style>
+  @font-face { font-family: "Noto Sans TC"; font-weight: 700; src: url("../fonts/NotoSansTC-Bold.otf"); }
+  body { margin: 0; background: #172A3A; font-family: "Noto Sans TC", sans-serif; color: #F4F1E8; }
+  .sheet { width: 1080px; padding: 60px 50px; box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .cell { background: #1E2C3A; border-radius: 28px; overflow: hidden; }
+  .cell h2 { margin: 0; padding: 18px 24px 0; font-size: 30px; }
+  .cell p { margin: 4px 24px 0; font-size: 20px; color: #B9C7D1; }
+  svg { display: block; width: 100%; }
+  .lbl { font: 700 22px "Noto Sans TC", sans-serif; fill: #F4F1E8; }
+  .lead { stroke: #F4F1E8; stroke-opacity: .7; stroke-width: 2.5; fill: none; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<!-- 1. 皮膚分層 ───────────────────────────────── -->
+<div class="cell"><h2>1. 皮膚分層</h2><p>part-skin：表皮／真皮／皮下脂肪／肌肉</p>
+<svg viewBox="0 0 450 450">
+  <defs>
+    <linearGradient id="dermisG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A3536"/><stop offset="1" stop-color="#5E2729"/></linearGradient>
+    <pattern id="muscleP" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(-20)"><rect width="18" height="18" fill="#9E4444"/><rect width="5" height="18" fill="#B65A5A"/></pattern>
+  </defs>
+  <g id="part-skin">
+    <rect width="450" height="450" fill="#1E2C3A"/>
+    <path d="M0 60 C 90 52, 180 68, 270 58 S 400 52, 450 60 L 450 88 L 0 88 Z" fill="#E8A79A"/>
+    <rect y="86" width="450" height="130" fill="url(#dermisG)"/>
+    <path d="M0 125 C 150 120, 300 132, 450 124 M0 170 C 140 176, 320 164, 450 172" stroke="#000" stroke-opacity=".12" stroke-width="3" fill="none"/>
+    <rect x="-5" y="196" width="460" height="16" rx="8" fill="#C8423B"/>
+    <rect y="214" width="450" height="160" fill="#E9B24F" fill-opacity=".4"/>
+    <g fill="#F2C76B" stroke="#C99A3E" stroke-width="3">
+      <circle cx="30" cy="240" r="26"/><circle cx="85" cy="240" r="26"/><circle cx="140" cy="240" r="26"/><circle cx="195" cy="240" r="26"/><circle cx="250" cy="240" r="26"/><circle cx="305" cy="240" r="26"/><circle cx="360" cy="240" r="26"/><circle cx="415" cy="240" r="26"/>
+      <circle cx="57" cy="290" r="26"/><circle cx="112" cy="290" r="26"/><circle cx="167" cy="290" r="26"/><circle cx="222" cy="290" r="26"/><circle cx="277" cy="290" r="26"/><circle cx="332" cy="290" r="26"/><circle cx="387" cy="290" r="26"/><circle cx="442" cy="290" r="26"/>
+      <circle cx="30" cy="340" r="26"/><circle cx="85" cy="340" r="26"/><circle cx="140" cy="340" r="26"/><circle cx="195" cy="340" r="26"/><circle cx="250" cy="340" r="26"/><circle cx="305" cy="340" r="26"/><circle cx="360" cy="340" r="26"/><circle cx="415" cy="340" r="26"/>
+    </g>
+    <circle class="hero" cx="222" cy="290" r="26" fill="#E9C46A" stroke="#fff" stroke-width="5"/>
+    <rect y="374" width="450" height="76" fill="url(#muscleP)"/>
+  </g>
+  <g><path class="lead" d="M20 30 L 20 45 L 120 60"/><text class="lbl" x="20" y="24">表皮</text>
+     <path class="lead" d="M430 120 L 430 135 L 330 150"/><text class="lbl" x="430" y="114" text-anchor="end">真皮</text>
+     <text class="lbl" x="440" y="232" text-anchor="end" dy="-30">皮下脂肪</text></g>
+</svg></div>
+
+<!-- 2. 微血管與紅血球 ─────────────────────────── -->
+<div class="cell"><h2>2. 微血管</h2><p>part-capillary：管壁、紅血球、主角粒子（脂肪酸）</p>
+<svg viewBox="0 0 450 450">
+  <g id="part-capillary">
+    <rect width="450" height="450" fill="#5E2729"/>
+    <path d="M0 150 C 120 130, 330 170, 450 150 L 450 300 C 330 320, 120 280, 0 300 Z" fill="#A83A34"/>
+    <path d="M0 165 C 120 145, 330 185, 450 165 L 450 285 C 330 305, 120 265, 0 285 Z" fill="#7E1F22"/>
+    <path d="M0 150 C 120 130, 330 170, 450 150 M0 300 C 120 280, 330 320, 450 300" stroke="#E8A79A" stroke-width="6" fill="none"/>
+    <g class="flow" fill="#D9473F" stroke="#B0302B" stroke-width="3">
+      <ellipse cx="60" cy="200" rx="30" ry="18"/><ellipse cx="60" cy="200" rx="12" ry="6" fill="#B0302B" stroke="none"/>
+      <ellipse cx="150" cy="250" rx="30" ry="18"/><ellipse cx="150" cy="250" rx="12" ry="6" fill="#B0302B" stroke="none"/>
+      <ellipse cx="310" cy="215" rx="30" ry="18"/><ellipse cx="310" cy="215" rx="12" ry="6" fill="#B0302B" stroke="none"/>
+      <ellipse cx="400" cy="255" rx="30" ry="18"/><ellipse cx="400" cy="255" rx="12" ry="6" fill="#B0302B" stroke="none"/>
+    </g>
+    <g class="hero"><circle cx="230" cy="225" r="16" fill="#E9C46A"/><circle cx="230" cy="225" r="26" fill="none" stroke="#fff" stroke-width="5"/></g>
+  </g>
+  <path class="lead" d="M240 120 L 240 100 L 380 100"/><text class="lbl" x="380" y="92" text-anchor="end">脂肪酸</text>
+  <path class="lead" d="M60 390 L 60 350 L 140 260"/><text class="lbl" x="20" y="420">紅血球</text>
+</svg></div>
+
+<!-- 3. 肌肉纖維與粒線體 ───────────────────────── -->
+<div class="cell"><h2>3. 肌肉與粒線體</h2><p>part-muscle：肌纖維切開，裡面的粒線體</p>
+<svg viewBox="0 0 450 450">
+  <g id="part-muscle">
+    <rect width="450" height="450" fill="#5E2729"/>
+    <g fill="#9E4444" stroke="#7A3536" stroke-width="3">
+      <rect x="-10" y="40" width="470" height="90" rx="45"/>
+      <rect x="-10" y="320" width="470" height="90" rx="45"/>
+    </g>
+    <g stroke="#B65A5A" stroke-width="4">
+      <path d="M20 45 V125 M50 45 V125 M80 45 V125 M110 45 V125 M140 45 V125 M170 45 V125 M200 45 V125 M230 45 V125 M260 45 V125 M290 45 V125 M320 45 V125 M350 45 V125 M380 45 V125 M410 45 V125 M440 45 V125"/>
+      <path d="M20 325 V405 M50 325 V405 M80 325 V405 M110 325 V405 M140 325 V405 M170 325 V405 M200 325 V405 M230 325 V405 M260 325 V405 M290 325 V405 M320 325 V405 M350 325 V405 M380 325 V405 M410 325 V405 M440 325 V405"/>
+    </g>
+    <!-- 中間那條切開 -->
+    <rect x="-10" y="160" width="470" height="130" rx="65" fill="#B65A5A" stroke="#7A3536" stroke-width="3"/>
+    <rect x="20" y="172" width="410" height="106" rx="53" fill="#8E3B3B"/>
+    <g id="mito">
+      <ellipse cx="110" cy="225" rx="58" ry="30" fill="#E07B53" stroke="#B85A3A" stroke-width="4"/>
+      <path d="M62 225 q 8 -18 16 0 t 16 0 t 16 0 t 16 0 t 16 0 t 16 0" stroke="#F4B183" stroke-width="5" fill="none"/>
+    </g>
+    <use href="#mito" x="200" y="-8"/>
+    <use href="#mito" x="120" y="18" opacity=".85"/>
+    <g class="hero"><circle cx="250" cy="200" r="13" fill="#E9C46A"/><circle cx="250" cy="200" r="22" fill="none" stroke="#fff" stroke-width="5"/></g>
+  </g>
+  <path class="lead" d="M110 300 L 110 255"/><text class="lbl" x="30" y="310">粒線體</text>
+  <text class="lbl" x="420" y="30" text-anchor="end">肌纖維</text>
+</svg></div>
+
+<!-- 4. 肺泡 ─────────────────────────────────────── -->
+<div class="cell"><h2>4. 肺泡</h2><p>part-alveoli：肺泡與外圍微血管，CO₂ 從這裡離開</p>
+<svg viewBox="0 0 450 450">
+  <g id="part-alveoli">
+    <rect width="450" height="450" fill="#1E2C3A"/>
+    <path d="M225 0 V 90" stroke="#E8A79A" stroke-width="34" stroke-linecap="round"/>
+    <path d="M225 0 V 90" stroke="#1E2C3A" stroke-width="18" stroke-linecap="round"/>
+    <g fill="#E8A79A" stroke="#C97F73" stroke-width="4">
+      <circle cx="225" cy="160" r="70"/><circle cx="130" cy="250" r="70"/><circle cx="320" cy="250" r="70"/>
+      <circle cx="180" cy="345" r="70"/><circle cx="290" cy="350" r="66"/>
+    </g>
+    <g fill="#24384A">
+      <circle cx="225" cy="160" r="56"/><circle cx="130" cy="250" r="56"/><circle cx="320" cy="250" r="56"/>
+      <circle cx="180" cy="345" r="56"/><circle cx="290" cy="350" r="52"/>
+    </g>
+    <g stroke="#C8423B" stroke-width="5" fill="none" opacity=".9">
+      <path d="M60 220 C 100 170, 160 110, 225 92 S 350 150, 395 220"/>
+      <path d="M70 300 C 120 420, 330 430, 380 300"/>
+    </g>
+    <g class="flow" fill="#B9C7D1">
+      <circle cx="225" cy="150" r="9"/><circle cx="210" cy="120" r="7"/><circle cx="238" cy="70" r="8"/>
+      <circle cx="140" cy="240" r="8"/><circle cx="315" cy="240" r="8"/><circle cx="185" cy="335" r="7"/>
+    </g>
+  </g>
+  <path class="lead" d="M300 70 L 300 55 L 248 70"/><text class="lbl" x="420" y="50" text-anchor="end">CO₂ 呼出去</text>
+  <text class="lbl" x="20" y="440">肺泡</text>
+</svg></div>
+
+<!-- 5. 小腸絨毛 ─────────────────────────────────── -->
+<div class="cell"><h2>5. 小腸絨毛</h2><p>part-villi：絨毛與裡面的微血管，養分從這裡吸收</p>
+<svg viewBox="0 0 450 450">
+  <g id="part-villi">
+    <rect width="450" height="450" fill="#1E2C3A"/>
+    <rect y="340" width="450" height="110" fill="#7A3536"/>
+    <g fill="#D9837A" stroke="#B5655D" stroke-width="4">
+      <path d="M10 345 V 170 a 30 30 0 0 1 60 0 V 345 Z"/>
+      <path d="M100 345 V 140 a 30 30 0 0 1 60 0 V 345 Z"/>
+      <path d="M190 345 V 160 a 30 30 0 0 1 60 0 V 345 Z"/>
+      <path d="M280 345 V 130 a 30 30 0 0 1 60 0 V 345 Z"/>
+      <path d="M370 345 V 165 a 30 30 0 0 1 60 0 V 345 Z"/>
+    </g>
+    <g stroke="#C8423B" stroke-width="4" fill="none">
+      <path d="M30 345 V 175 a 10 10 0 0 1 20 0 V 345"/><path d="M120 345 V 145 a 10 10 0 0 1 20 0 V 345"/>
+      <path d="M210 345 V 165 a 10 10 0 0 1 20 0 V 345"/><path d="M300 345 V 135 a 10 10 0 0 1 20 0 V 345"/>
+      <path d="M390 345 V 170 a 10 10 0 0 1 20 0 V 345"/>
+    </g>
+    <g class="flow">
+      <circle cx="85" cy="80" r="10" fill="#E9C46A"/><circle cx="175" cy="60" r="10" fill="#F4F1E8"/>
+      <circle cx="265" cy="90" r="10" fill="#E9C46A"/><circle cx="355" cy="55" r="10" fill="#F4F1E8"/>
+    </g>
+  </g>
+  <text class="lbl" x="20" y="40">養分（糖、脂肪酸）</text>
+  <text class="lbl" x="430" y="430" text-anchor="end">腸壁</text>
+</svg></div>
+
+<!-- 6. 胃壁 ─────────────────────────────────────── -->
+<div class="cell"><h2>6. 胃</h2><p>part-stomach：胃壁皺摺，撐開時皺摺變平</p>
+<svg viewBox="0 0 450 450">
+  <g id="part-stomach">
+    <rect width="450" height="450" fill="#1E2C3A"/>
+    <path d="M150 20 C 140 120, 40 150, 50 280 C 60 420, 300 440, 380 340 C 440 260, 400 140, 300 160 C 240 170, 230 90, 240 20 Z" fill="#9E4444" stroke="#7A3536" stroke-width="6"/>
+    <path d="M170 30 C 160 130, 75 160, 82 280 C 90 390, 290 405, 352 325 C 400 260, 370 175, 300 188 C 230 200, 210 110, 220 30 Z" fill="#D9837A"/>
+    <g class="rugae" stroke="#B5655D" stroke-width="6" fill="none" stroke-linecap="round">
+      <path d="M110 230 q 20 -20 40 0 t 40 0 t 40 0"/>
+      <path d="M105 290 q 20 -20 40 0 t 40 0 t 40 0 t 40 0"/>
+      <path d="M130 345 q 20 -20 40 0 t 40 0 t 40 0"/>
+    </g>
+    <g class="flow">
+      <rect x="150" y="270" width="26" height="20" rx="6" fill="#F4F1E8"/>
+      <circle cx="220" cy="320" r="13" fill="#E9C46A"/><rect x="260" y="250" width="22" height="22" rx="5" fill="#8DB580"/>
+    </g>
+  </g>
+  <text class="lbl" x="430" y="40" text-anchor="end">胃壁皺摺</text>
+</svg></div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="zh-Hant" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <!-- example-talking-head：分鏡表第 2 版（storyboard/storyboard.md）。
+         主特效：starfield（HyperFrames registry，Apache-2.0，改寫在 styles/zodiac.js）。
+         模式由根元素 class 決定，prepare-composition.py --mode 切換：
+           mode-composite＝原片＋全部；mode-overlay＝透明、只有動畫；mode-captions＝透明、只有字幕 -->
+    <script src="vendor/gsap.min.js"></script>
+    <script src="styles/zodiac.js"></script>
+    <link rel="stylesheet" href="styles/zodiac.css" />
+    <style>
+      html, body { background: transparent; }
+      #root { background: #000; }
+      .layer { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+      #footage { object-fit: cover; }
+
+      /* 模式 */
+      #root.mode-overlay, #root.mode-captions { background: transparent; }
+      #root.mode-overlay #footage, #root.mode-overlay #captions { opacity: 0 !important; }
+      #root.mode-captions .layer:not(#captions) { opacity: 0 !important; }
+
+      /* 夜空帶：臉上方的牆（y < 640） */
+      .sky { left: 0; top: 0; width: 1080px; height: 700px;
+        background: linear-gradient(180deg, var(--night) 0%, rgba(20,26,58,.92) 55%, rgba(20,26,58,0) 100%); }
+      .bandstars { left: 0; top: 0; width: 1080px; height: 700px;
+        -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%);
+        mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%); }
+      .fullstars { width: 1080px; height: 1920px; }
+
+      /* 星座卡（樣張 A） */
+      .card { top: 268px; width: 470px; height: 285px; border-radius: 28px; padding: 20px 22px;
+        background: rgba(35, 43, 92, .78); border: 2px solid rgba(242, 210, 122, .5);
+        display: flex; flex-direction: column; gap: 10px; }
+      .card.L { left: 50px; } .card.R { right: 50px; }
+      .card.lit { border-color: var(--gold); box-shadow: 0 0 40px rgba(242, 210, 122, .35); }
+      .card .hd { display: flex; align-items: center; gap: 14px; }
+      .card .hd .emo { font-size: 64px; }
+      .card .lab { display: block; font-size: 28px; font-weight: 700; color: var(--mute); line-height: 1.2; }
+      .card .sign { display: block; font-size: 50px; font-weight: 900; color: var(--gold); line-height: 1.15; }
+      .tags { display: flex; flex-wrap: wrap; gap: 10px; }
+      .card .tag { font-size: 30px; padding: 10px 16px 12px; }
+      .card.R .tag { background: rgba(255, 178, 63, .2); border-color: var(--kw); }
+      .note { left: 0; right: 0; top: 566px; text-align: center; font-size: 28px; font-weight: 700; color: rgba(247,243,234,.78); }
+      .strip { left: 50%; top: 562px; transform: translateX(-50%); white-space: nowrap; padding: 8px 28px 10px; border-radius: 999px;
+        background: rgba(20, 26, 58, .9); border: 2px solid var(--gold); font-size: 34px; font-weight: 900; }
+      .strip b { color: var(--kw); }
+
+      /* S1 */
+      .ari { top: 268px; width: 380px; height: 285px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+      .ari .emo { font-size: 100px; }
+      .ari .sign { font-size: 54px; font-weight: 900; color: var(--gold); }
+      .ari .q { font-size: 30px; font-weight: 700; color: var(--mute); }
+      #s1-a { left: 70px; } #s1-b { right: 70px; }
+      #s1-ne { left: 450px; top: 330px; width: 180px; text-align: center; font-size: 150px; font-weight: 900; color: var(--kw); line-height: 1; }
+
+      /* S4 */
+      #s4-card { left: 60px; top: 262px; width: 960px; height: 300px; padding: 22px 30px;
+        display: flex; flex-direction: column; align-items: center; gap: 14px; }
+      #s4-by { font-size: 28px; font-weight: 700; color: var(--mute); }
+      #s4-title { font-size: 60px; font-weight: 900; color: var(--gold); line-height: 1.1; }
+      #s4-row { display: flex; align-items: center; gap: 14px; }
+      #s4-row .tag { font-size: 34px; }
+      #s4-row .plus { font-size: 40px; font-weight: 900; color: var(--gold); }
+      #s4-go { font-size: 36px; font-weight: 900; color: var(--kw); }
+
+      /* S5 CTA（不做全螢幕，放在臉上方） */
+      #s5-q { left: 0; right: 0; top: 250px; text-align: center; font-size: 50px; font-weight: 900; color: var(--gold); }
+      #s5-card { left: 140px; top: 335px; width: 800px; height: 200px; border-radius: 40px; background: #fff; color: var(--night);
+        display: flex; align-items: center; justify-content: center; gap: 24px; }
+      #s5-card .emo { font-size: 90px; }
+      #s5-card .say { font-size: 76px; font-weight: 900; }
+      #s5-kw { display: inline-block; background: var(--kw); border-radius: 36px; padding: 6px 34px 12px; font-size: 104px; font-weight: 900; line-height: 1.1; }
+      #s5-act { left: 0; right: 0; top: 556px; text-align: center; font-size: 36px; font-weight: 900; }
+
+      /* C1 */
+      .orb { width: 360px; height: 360px; border-radius: 50%; display: grid; place-items: center; }
+      .orb .emo { font-size: 230px; }
+      #c1-sun { left: 360px; top: 470px; background: radial-gradient(circle, rgba(255,210,110,.45), rgba(255,210,110,0) 70%); }
+      #c1-moon { left: 560px; top: 640px; background: radial-gradient(circle, rgba(242,210,122,.4), rgba(242,210,122,0) 70%); }
+      .orblab { font-size: 54px; font-weight: 900; text-align: center; width: 360px; }
+      #c1-sunlab { left: 120px; top: 900px; color: var(--mute); }
+      #c1-moonlab { left: 600px; top: 1060px; color: var(--gold); }
+      #c1-moonlab small { display: block; font-size: 34px; font-weight: 700; color: var(--kw); margin-top: 6px; }
+      #c1-orbit { left: 140px; top: 420px; width: 800px; height: 800px; border-radius: 50%; border: 2px dashed rgba(242,210,122,.25); }
+
+      /* C2 */
+      #c2-want { left: 90px; top: 290px; font-size: 64px; font-weight: 900; }
+      #c2-want .g { color: var(--gold); }
+      #c2-chart { left: 90px; top: 430px; width: 900px; height: 520px; padding: 36px 40px; }
+      #c2-chart .hd { font-size: 40px; font-weight: 900; color: var(--gold); }
+      #c2-chart svg { position: absolute; left: 40px; top: 120px; }
+      .bubble { padding: 22px 30px; font-size: 46px; font-weight: 900; display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+      .bubble .emo { font-size: 64px; }
+      #c2-b1 { left: 90px; top: 1030px; }
+      #c2-b2 { right: 90px; top: 1180px; border-color: var(--kw); }
+
+      /* C3 */
+      #c3-phone { left: 290px; top: 300px; width: 500px; height: 960px; border-radius: 64px; background: #10142e;
+        border: 10px solid #2c3570; box-shadow: 0 0 60px rgba(242,210,122,.18); overflow: hidden; }
+      #c3-screen { position: absolute; inset: 24px; border-radius: 40px; background: radial-gradient(circle at 50% 40%, #3a4486, #1a2050 70%); }
+      #c3-rec { left: 34px; top: 34px; font-size: 34px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
+      #c3-dot { width: 22px; height: 22px; border-radius: 50%; background: #ff5a5a; display: inline-block; }
+      #c3-person { left: 0; right: 0; top: 250px; text-align: center; font-size: 220px; }
+      #c3-take { left: 0; right: 0; top: 560px; text-align: center; font-size: 48px; font-weight: 900; color: var(--gold); }
+      #c3-take b { font-size: 96px; color: var(--kw); }
+      #c3-meh { left: 0; right: 0; top: 700px; text-align: center; font-size: 40px; font-weight: 700; color: var(--mute); }
+      #c3-pub { left: 330px; top: 1290px; width: 420px; height: 96px; border-radius: 48px; background: rgba(247,243,234,.14);
+        border: 2px dashed rgba(247,243,234,.45); display: grid; place-items: center; font-size: 44px; font-weight: 900; color: var(--mute); }
+
+      /* C4 */
+      .col { top: 430px; width: 420px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+      #c4-L { left: 90px; } #c4-R { right: 90px; }
+      .who { font-size: 170px; }
+      .chip { width: 380px; padding: 18px 20px; text-align: center; font-size: 44px; font-weight: 900; }
+      .chip .emo { font-size: 50px; vertical-align: -6px; margin-right: 8px; }
+      .chip.sun { color: var(--gold); }
+      .chip.ma { border-color: var(--kw); color: var(--kw); }
+      .chip.mb { border-color: #9fd3ff; color: #bfe2ff; }
+      .eq { left: 0; right: 0; text-align: center; font-size: 46px; font-weight: 900; }
+      #c4-same { top: 860px; color: var(--gold); }
+      #c4-diff { top: 1012px; color: var(--kw); }
+      #c4-paths { left: 0; top: 1080px; }
+      #c4-res { left: 0; right: 0; top: 1250px; text-align: center; font-size: 52px; font-weight: 900; }
+      #c4-res .g { color: var(--kw); }
+
+      /* 字幕（深藍半透明底，一行；關鍵字橘黃 1.75 倍） */
+      #captions p { position: absolute; left: 540px; top: 1495px; transform: translate(-50%, -50%); opacity: 0;
+        padding: 10px 34px 16px; border-radius: 26px; background: rgba(20, 26, 58, .82);
+        font-size: 60px; font-weight: 900; line-height: 1.2; white-space: nowrap; box-shadow: 0 0 30px rgba(20,26,58,.6); }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="mode-composite" data-composition-id="main" data-start="0" data-duration="59" data-width="1080" data-height="1920">
+
+      <video id="footage" class="clip layer" src="MTVideo.mp4" data-start="0" data-duration="59" data-track-index="0" data-has-audio="true" playsinline></video>
+
+      <!-- 夜空帶 A：S1（0–4.27） -->
+      <section id="bandA" class="clip layer" data-start="0" data-duration="4.27" data-track-index="1">
+        <div class="abs sky"></div>
+        <div id="starsA" class="abs stars bandstars" data-layout-ignore></div>
+        <div class="abs brand">品牌名稱 ✦ 星座副業</div>
+        <div id="s1-a" class="abs ari glass"><span class="emo">🐏</span><span class="sign">牡羊座</span><span class="q">個性？適合的副業？</span></div>
+        <div id="s1-ne" class="abs">≠</div>
+        <div id="s1-b" class="abs ari glass"><span class="emo">🐏</span><span class="sign">牡羊座</span><span class="q">個性？適合的副業？</span></div>
+      </section>
+
+      <!-- 夜空帶 B：S2（7.85–22.39）＋S3（22.39–31.29） -->
+      <section id="bandB" class="clip layer" data-start="7.85" data-duration="23.44" data-track-index="1">
+        <div class="abs sky"></div>
+        <div id="starsB" class="abs stars bandstars" data-layout-ignore></div>
+        <div class="abs brand">品牌名稱 ✦ 星座副業</div>
+        <!-- S2：太陽牡羊／月亮巨蟹 -->
+        <div id="s2-sun" class="abs card L">
+          <div class="hd"><span class="emo">☀️</span><span><span class="lab">太陽星座・外在</span><span class="sign">牡羊座</span></span></div>
+          <div class="tags"><span id="s2-t1" class="tag">喜歡挑戰</span><span id="s2-t2" class="tag">行動力強</span><span id="s2-t3" class="tag">看到機會就想試</span></div>
+        </div>
+        <div id="s2-moon" class="abs card R lit">
+          <div class="hd"><span class="emo">🌙</span><span><span class="lab">月亮星座・內在</span><span class="sign">巨蟹座</span></span></div>
+          <div class="tags"><span id="s2-m1" class="tag">需要安全感</span><span id="s2-m2" class="tag">擔心失敗</span><span id="s2-m3" class="tag">在意收入穩定</span></div>
+        </div>
+        <div id="s2-note" class="abs note">＊星座只是認識自己的有趣角度，個性傾向僅供參考</div>
+        <div id="s2-strip" class="abs strip">💡 適合：<b>低風險</b>、慢慢累積的副業</div>
+        <!-- S3：太陽獅子／月亮處女 -->
+        <div id="s3-sun" class="abs card L">
+          <div class="hd"><span class="emo">☀️</span><span><span class="lab">太陽星座・外在</span><span class="sign">獅子座</span></span></div>
+          <div class="tags"><span id="s3-t1" class="tag">喜歡展現能力</span><span id="s3-t2" class="tag">希望努力被看見</span></div>
+        </div>
+        <div id="s3-moon" class="abs card R lit">
+          <div class="hd"><span class="emo">🌙</span><span><span class="lab">月亮星座・內在</span><span class="sign">處女座</span></span></div>
+          <div class="tags"><span id="s3-m1" class="tag">在意細節</span><span id="s3-m2" class="tag">擔心做得不夠好</span></div>
+        </div>
+        <div id="s3-note" class="abs note">＊星座只是認識自己的有趣角度，個性傾向僅供參考</div>
+      </section>
+
+      <!-- 夜空帶 C：S4（46.49–53.53）＋S5 CTA（53.53–59） -->
+      <section id="bandC" class="clip layer" data-start="46.49" data-duration="12.51" data-track-index="1">
+        <div class="abs sky"></div>
+        <div id="starsC" class="abs stars bandstars" data-layout-ignore></div>
+        <div id="s4-card" class="abs glass">
+          <div id="s4-by">品牌名稱</div>
+          <div id="s4-title">免費測驗</div>
+          <div id="s4-row">
+            <span id="s4-c1" class="tag">☀️ 太陽星座</span><span id="s4-p1" class="plus">＋</span>
+            <span id="s4-c2" class="tag hot">🌙 月亮星座</span><span id="s4-p2" class="plus">＋</span>
+            <span id="s4-c3" class="tag">📋 行為習慣</span>
+          </div>
+          <div id="s4-go">→ 找到適合你的副業方向</div>
+        </div>
+        <div id="s5-q" class="abs" data-cta="question">好奇自己適合什麼樣的副業？</div>
+        <div id="s5-card" class="abs"><span class="emo">💬</span><span class="say">留言</span><span id="s5-kw" data-cta="keyword">副業</span></div>
+        <div id="s5-act" class="abs" data-cta="action-tail">我把免費測驗傳給你！</div>
+      </section>
+
+      <!-- C1 插畫：太陽與月亮（4.27–7.85） -->
+      <section id="c1" class="clip layer" data-start="4.27" data-duration="3.58" data-track-index="2">
+        <div class="abs night-full"></div>
+        <div id="starsC1" class="abs stars fullstars" data-layout-ignore></div>
+        <div id="c1-orbit" class="abs"></div>
+        <div class="abs brand">品牌名稱 ✦ 星座副業</div>
+        <div id="c1-sun" class="abs orb"><span class="emo">☀️</span></div>
+        <div id="c1-sunlab" class="abs orblab">太陽星座</div>
+        <div id="c1-moon" class="abs orb"><span class="emo">🌙</span></div>
+        <div id="c1-moonlab" class="abs orblab">月亮星座<small>也很重要！</small></div>
+      </section>
+
+      <!-- C2 插畫：很想嘗試，但是…（16.21–19.11） -->
+      <section id="c2" class="clip layer" data-start="16.21" data-duration="2.9" data-track-index="2">
+        <div class="abs night-full"></div>
+        <div id="starsC2" class="abs stars fullstars" data-layout-ignore></div>
+        <div class="abs brand">品牌名稱 ✦ 星座副業</div>
+        <div id="c2-want" class="abs">很想嘗試，<span class="g">但是…</span></div>
+        <div id="c2-chart" class="abs glass">
+          <div class="hd">💰 副業收入</div>
+          <svg width="820" height="360" viewBox="0 0 820 360">
+            <line x1="0" y1="330" x2="820" y2="330" stroke="rgba(247,243,234,.3)" stroke-width="3" />
+            <polyline id="c2-line" fill="none" stroke="#ffb23f" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"
+              points="0,250 90,140 170,260 250,120 330,300 420,90 500,280 590,170 670,310 760,150 820,240" />
+            <text id="c2-q1" x="250" y="90" font-size="80" fill="#f2d27a" font-weight="900">?</text>
+            <text id="c2-q2" x="610" y="120" font-size="80" fill="#f2d27a" font-weight="900">?</text>
+          </svg>
+        </div>
+        <div id="c2-b1" class="abs glass bubble"><span class="emo">😰</span>失敗了怎麼辦？</div>
+        <div id="c2-b2" class="abs glass bubble"><span class="emo">💸</span>收入不穩定？</div>
+      </section>
+
+      <!-- C3 插畫：一直重拍（31.29–35.49） -->
+      <section id="c3" class="clip layer" data-start="31.29" data-duration="4.2" data-track-index="2">
+        <div class="abs night-full"></div>
+        <div id="starsC3" class="abs stars fullstars" data-layout-ignore></div>
+        <div class="abs brand">品牌名稱 ✦ 星座副業</div>
+        <div id="c3-phone" class="abs">
+          <div id="c3-screen">
+            <div id="c3-rec" class="abs"><i id="c3-dot"></i>REC</div>
+            <div id="c3-person" class="abs emo">🙋</div>
+            <div id="c3-take" class="abs">第 <b id="c3-n">1</b> 次重拍</div>
+            <div id="c3-meh" class="abs">「再一次…還不夠好」</div>
+          </div>
+        </div>
+        <div id="c3-pub" class="abs">發布 🔒</div>
+      </section>
+
+      <!-- C4 插畫：太陽相同、月亮不同（35.49–40.75） -->
+      <section id="c4" class="clip layer" data-start="35.49" data-duration="5.26" data-track-index="2">
+        <div class="abs night-full"></div>
+        <div id="starsC4" class="abs stars fullstars" data-layout-ignore></div>
+        <div class="abs brand">品牌名稱 ✦ 星座副業</div>
+        <div id="c4-title" class="abs title">有沒有<span class="g">發現</span>？</div>
+        <div id="c4-L" class="abs col">
+          <div class="who emo">🧑</div>
+          <div class="chip glass sun"><span class="emo">☀️</span>牡羊座</div>
+          <div class="chip glass ma"><span class="emo">🌙</span>巨蟹座</div>
+        </div>
+        <div id="c4-R" class="abs col">
+          <div class="who emo">👩</div>
+          <div class="chip glass sun"><span class="emo">☀️</span>牡羊座</div>
+          <div class="chip glass mb"><span class="emo">🌙</span>處女座</div>
+        </div>
+        <div id="c4-same" class="abs eq">＝ 太陽相同 ＝</div>
+        <div id="c4-diff" class="abs eq">≠ 月亮不同 ≠</div>
+        <svg id="c4-paths" class="abs" width="1080" height="180" viewBox="0 0 1080 180">
+          <path id="c4-p1" d="M300,10 C300,90 180,110 140,170" fill="none" stroke="#ffb23f" stroke-width="8" stroke-linecap="round" />
+          <path id="c4-p2" d="M780,10 C780,90 900,110 940,170" fill="none" stroke="#9fd3ff" stroke-width="8" stroke-linecap="round" />
+        </svg>
+        <div id="c4-res" class="abs">做事方式，<span class="g">可能不一樣</span></div>
+      </section>
+
+      <!-- 字幕（prepare-composition.py 依 transcript.srt 與 project.json 產生） -->
+      <div id="captions" class="clip layer" data-start="0" data-duration="59" data-track-index="5">
+        <!-- CAPTIONS:BEGIN -->
+        <p data-s="0.59" data-e="2.31">你知道就算兩個人都是<span class="kw">牡羊座</span></p>
+        <p data-s="2.31" data-e="3.41">個性跟適合的<span class="kw">副業</span></p>
+        <p data-s="3.41" data-e="4.27">也可能完全不一樣嗎？</p>
+        <p data-s="4.27" data-e="5.57">因為除了<span class="kw">太陽星座</span>之外</p>
+        <p data-s="5.57" data-e="6.35">其實還有一個很重要的</p>
+        <p data-s="6.35" data-e="7.17">就是<span class="kw">月亮星座</span>！</p>
+        <p data-s="7.17" data-e="7.85">舉個例子</p>
+        <p data-s="7.85" data-e="9.07">如果太陽是<span class="kw">牡羊座</span></p>
+        <p data-s="9.07" data-e="10.07">通常比較喜歡挑戰</p>
+        <p data-s="10.07" data-e="10.81">行動力也比較強</p>
+        <p data-s="10.81" data-e="11.85">看到新的<span class="kw">副業</span>機會</p>
+        <p data-s="11.85" data-e="13.41">可能馬上就想試試看！</p>
+        <p data-s="13.41" data-e="14.95">但如果月亮是<span class="kw">巨蟹座</span>呢？</p>
+        <p data-s="14.95" data-e="16.21">可能同時很需要<span class="kw">安全感</span></p>
+        <p data-s="16.21" data-e="16.99">所以即使很想嘗試</p>
+        <p data-s="16.99" data-e="18.17">也會擔心失敗</p>
+        <p data-s="18.17" data-e="19.11">擔心收入不穩定</p>
+        <p data-s="19.11" data-e="20.73">這樣可能更適合從<span class="kw">低風險</span></p>
+        <p data-s="20.73" data-e="22.39">能慢慢累積成果的<span class="kw">副業</span>開始</p>
+        <p data-s="22.39" data-e="23.91">再來，如果太陽是<span class="kw">獅子座</span></p>
+        <p data-s="23.91" data-e="25.69">可能喜歡展現自己的能力</p>
+        <p data-s="25.69" data-e="27.25">也希望自己的努力能被看見</p>
+        <p data-s="27.25" data-e="28.85">但如果月亮是<span class="kw">處女座</span>呢？</p>
+        <p data-s="28.85" data-e="29.89">可能會很在意細節</p>
+        <p data-s="29.89" data-e="31.29">甚至擔心自己做得不夠好</p>
+        <p data-s="31.29" data-e="32.55">明明很想經營自媒體</p>
+        <p data-s="32.55" data-e="33.21">卻可能因為一支</p>
+        <p data-s="33.21" data-e="34.41">影片怎麼拍都不滿意</p>
+        <p data-s="34.41" data-e="35.49">最後遲遲不敢發布！</p>
+        <p data-s="35.49" data-e="36.47">所以有沒有發現了呢？</p>
+        <p data-s="36.47" data-e="38.57" style="font-size:48px"><span class="kw">太陽星座</span>相同，<span class="kw">月亮星座</span>不同</p>
+        <p data-s="38.57" data-e="39.35">做事情的方式就</p>
+        <p data-s="39.35" data-e="40.75">可能出現<span class="kw">不同</span>的傾向</p>
+        <p data-s="40.75" data-e="40.93">當然</p>
+        <p data-s="40.93" data-e="41.89">星座只是認識自己的</p>
+        <p data-s="41.89" data-e="42.67">一個有趣角度</p>
+        <p data-s="42.67" data-e="43.85">真正要找到適合的<span class="kw">副業</span></p>
+        <p data-s="43.85" data-e="44.89">還需要了解你的個性</p>
+        <p data-s="44.89" data-e="45.45">行動習慣</p>
+        <p data-s="45.45" data-e="46.49">以及現在的生活狀況</p>
+        <p data-s="46.49" data-e="47.27">所以我做了一個</p>
+        <p data-s="47.27" data-e="48.67">星座<span class="kw">副業</span><span class="kw">適性測驗</span>！</p>
+        <p data-s="48.67" data-e="50.17" style="font-size:54px">結合<span class="kw">太陽星座</span>、<span class="kw">月亮星座</span></p>
+        <p data-s="50.17" data-e="51.43">還有實際行為習慣</p>
+        <p data-s="51.43" data-e="52.49">幫助大家找到比較</p>
+        <p data-s="52.49" data-e="53.53">適合自己的<span class="kw">副業</span>方向</p>
+        <p data-s="53.53" data-e="54.27">如果會好奇</p>
+        <p data-s="54.27" data-e="55.35">自己適合什麼樣的<span class="kw">副業</span></p>
+        <p data-s="55.35" data-e="56.43">歡迎在下面留言「<span class="kw">副業</span>」！</p>
+        <p data-s="56.43" data-e="57.99">我把測驗傳給你喔！</p>
+        <!-- CAPTIONS:END -->
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true }), Z = window.Zodiac;
+      const $ = (s) => document.querySelector(s);
+      const hide = (sel) => gsap.set(sel, { opacity: 0 });
+      const fadeIn = (s, t, d = 0.35, to = 1) => tl.fromTo(s, { opacity: 0 }, { opacity: to, duration: d, ease: "none" }, t);
+      const fadeOut = (s, t, to = 0) => tl.to(s, { opacity: to, duration: 0.3, ease: "none" }, t);
+      const breathe = (s, t, end, scale) => {
+        const n = Math.max(1, Math.floor((end - t) / 1.1));
+        tl.to(s, { scale, duration: 0.55, ease: "sine.inOut", yoyo: true, repeat: n * 2 - 1 }, t);
+      };
+      // 時間都用原片的秒數（words.json）
+
+      // 只有字幕的版本（captions 模式）沒有畫面段落，就跳過所有畫面動畫
+      if (document.querySelector("section")) {
+        // ── 星空（唯一主特效）────────────────────────
+        [["#starsA", 0, 4.27, 1], ["#starsB", 7.85, 23.44, 1], ["#starsC", 46.49, 12.51, 1]].forEach(([s, t, d]) =>
+          Z.addStars(tl, Z.starfield($(s), { w: 1080, h: 700, count: 140, dur: d }), t, d));
+        [["#starsC1", 4.27, 3.58], ["#starsC2", 16.21, 2.9], ["#starsC3", 31.29, 4.2], ["#starsC4", 35.49, 5.26]].forEach(([s, t, d]) =>
+          Z.addStars(tl, Z.starfield($(s), { w: 1080, h: 1920, count: 240, dur: d }), t, d));
+
+        // ── S1（0–4.27）：兩個牡羊座 ≠ ──────────────────
+        hide(["#s1-a", "#s1-b", "#s1-ne"]);
+        Z.pop(tl, "#s1-a", 1.79);
+        Z.pop(tl, "#s1-b", 1.99);
+        tl.fromTo("#s1-ne", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(2.5)" }, 3.77);
+
+        // ── C1（4.27–7.85）：太陽 → 月亮 ────────────────
+        hide(["#c1-moon", "#c1-moonlab", "#c1-sunlab", "#c1-orbit"]);
+        Z.pop(tl, "#c1-sun", 4.27);
+        Z.fadeUp(tl, "#c1-sunlab", 4.79);
+        fadeIn("#c1-orbit", 5.07, 0.6);
+        tl.to("#c1-sun", { x: -240, y: -60, scale: 0.6, opacity: 0.7, duration: 0.8, ease: "power2.inOut" }, 5.57);
+        tl.to("#c1-sunlab", { y: -150, opacity: 0.6, duration: 0.8, ease: "power2.inOut" }, 5.57);
+        tl.fromTo("#c1-moon", { opacity: 0, y: 260, scale: 0.6 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "back.out(1.6)" }, 6.17);
+        Z.fadeUp(tl, "#c1-moonlab", 6.43);
+        tl.to("#c1-moon", { scale: 1.06, duration: 0.55, yoyo: true, repeat: 1, ease: "sine.inOut" }, 6.87);
+
+        // ── S2（7.85–22.39）：太陽牡羊／月亮巨蟹 ─────────
+        hide(["#s2-sun", "#s2-moon", "#s2-t1", "#s2-t2", "#s2-t3", "#s2-m1", "#s2-m2", "#s2-m3", "#s2-note", "#s2-strip"]);
+        Z.pop(tl, "#s2-sun", 8.0);
+        Z.tagIn(tl, "#s2-t1", 9.77);
+        Z.tagIn(tl, "#s2-t2", 10.07);
+        Z.tagIn(tl, "#s2-t3", 12.71);
+        tl.to("#s2-sun", { opacity: 0.7, duration: 0.3 }, 13.77);
+        Z.pop(tl, "#s2-moon", 14.31);
+        fadeIn("#s2-note", 14.6);
+        Z.tagIn(tl, "#s2-m1", 15.77);
+        tl.set("#bandB", { opacity: 0 }, 16.21);   // C2 全螢幕時把夜空帶藏起來（避免版面檢查誤判重疊）
+        tl.set("#bandB", { opacity: 1 }, 19.11);
+        Z.tagIn(tl, "#s2-m2", 17.15);   // C2 期間在背後完成，回到講者時卡片已完整
+        Z.tagIn(tl, "#s2-m3", 18.47);
+        fadeOut("#s2-note", 19.0);
+        tl.fromTo("#s2-strip", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(2)" }, 19.11);
+
+        // ── C2（16.21–19.11）：擔心失敗、收入不穩定 ──────
+        const c2line = $("#c2-line"), c2len = c2line.getTotalLength();
+        gsap.set(c2line, { attr: { "stroke-dasharray": c2len, "stroke-dashoffset": c2len } });
+        hide(["#c2-b1", "#c2-b2", "#c2-q1", "#c2-q2"]);
+        Z.fadeUp(tl, "#c2-want", 16.21);
+        Z.fadeUp(tl, "#c2-chart", 16.31);
+        tl.to(c2line, { attr: { "stroke-dashoffset": 0 }, duration: 1.6, ease: "none" }, 16.51);
+        Z.pop(tl, "#c2-q1", 17.0);
+        Z.pop(tl, "#c2-b1", 17.15);
+        Z.pop(tl, "#c2-q2", 17.9);
+        Z.pop(tl, "#c2-b2", 18.47);
+
+        // ── S3（22.39–31.29）：太陽獅子／月亮處女 ─────────
+        hide(["#s3-sun", "#s3-moon", "#s3-t1", "#s3-t2", "#s3-m1", "#s3-m2", "#s3-note"]);
+        fadeOut(["#s2-sun", "#s2-moon", "#s2-strip"], 22.39);
+        Z.pop(tl, "#s3-sun", 22.6);
+        tl.fromTo("#s3-sun .sign", { color: "#f7f3ea" }, { color: "#f2d27a", duration: 0.3 }, 23.45);
+        Z.tagIn(tl, "#s3-t1", 24.71);
+        Z.tagIn(tl, "#s3-t2", 26.81);
+        tl.to("#s3-sun", { opacity: 0.7, duration: 0.3 }, 27.6);
+        Z.pop(tl, "#s3-moon", 28.23);
+        fadeIn("#s3-note", 28.6);
+        Z.tagIn(tl, "#s3-m1", 29.59);
+        Z.tagIn(tl, "#s3-m2", 30.75);
+
+        // ── C3（31.29–35.49）：一直重拍 ─────────────────
+        hide(["#c3-meh", "#c3-pub"]);
+        Z.pop(tl, "#c3-phone", 31.29);
+        tl.to("#c3-dot", { opacity: 0.2, duration: 0.4, yoyo: true, repeat: 9, ease: "steps(1)" }, 31.29);
+        const n3 = $("#c3-n");
+        for (let k = 2; k <= 8; k++) tl.set(n3, { textContent: String(k) }, 32.55 + (k - 2) * 0.28);
+        tl.fromTo("#c3-take", { scale: 1 }, { scale: 1.08, duration: 0.14, yoyo: true, repeat: 13, ease: "sine.inOut" }, 32.55);
+        Z.fadeUp(tl, "#c3-meh", 34.01);
+        Z.fadeUp(tl, "#c3-pub", 34.4);
+        tl.to("#c3-pub", { x: 10, duration: 0.07, yoyo: true, repeat: 5, ease: "sine.inOut" }, 34.7);
+
+        // ── C4（35.49–40.75）：太陽相同、月亮不同 ─────────
+        const c4sun = gsap.utils.toArray("#c4 .chip.sun"), c4moon = gsap.utils.toArray("#c4 .chip.ma, #c4 .chip.mb");
+        const c4paths = ["#c4-p1", "#c4-p2"].map((s) => $(s));
+        hide([...c4sun, ...c4moon, "#c4-same", "#c4-diff", "#c4-res", "#c4 .who"]);
+        c4paths.forEach((p) => { const l = p.getTotalLength(); gsap.set(p, { attr: { "stroke-dasharray": l, "stroke-dashoffset": l } }); });
+        Z.fadeUp(tl, "#c4-title", 35.59);
+        gsap.utils.toArray("#c4 .who").forEach((w, i) => Z.pop(tl, w, 35.99 + i * 0.2));
+        c4sun.forEach((s, i) => Z.pop(tl, s, 36.49 + i * 0.15));
+        Z.fadeUp(tl, "#c4-same", 37.11);
+        c4moon.forEach((s, i) => Z.pop(tl, s, 37.69 + i * 0.15));
+        Z.fadeUp(tl, "#c4-diff", 38.17);
+        c4paths.forEach((p) => tl.to(p, { attr: { "stroke-dashoffset": 0 }, duration: 0.8, ease: "power2.out" }, 38.57));
+        Z.fadeUp(tl, "#c4-res", 39.0);
+
+        // ── S4（46.49–53.53）：測驗卡 ──────────────────
+        hide(["#s4-title", "#s4-c1", "#s4-p1", "#s4-c2", "#s4-p2", "#s4-c3", "#s4-go", "#s5-q", "#s5-card", "#s5-act"]);
+        fadeIn("#bandC .sky", 46.49, 0.4);
+        Z.pop(tl, "#s4-card", 46.6);
+        Z.pop(tl, "#s4-title", 48.06);
+        Z.tagIn(tl, "#s4-c1", 49.19);
+        fadeIn("#s4-p1", 49.43, 0.2);
+        Z.tagIn(tl, "#s4-c2", 49.67);
+        fadeIn("#s4-p2", 50.2, 0.2);
+        Z.tagIn(tl, "#s4-c3", 50.45);
+        Z.fadeUp(tl, "#s4-go", 52.99);
+
+        // ── S5（53.53–59）：CTA ───────────────────────
+        fadeOut("#s4-card", 53.53);
+        Z.fadeUp(tl, "#s5-q", 53.87);
+        Z.pop(tl, "#s5-card", 55.83);
+        breathe("#s5-kw", 56.3, 58.9, 1.06);
+        Z.fadeUp(tl, "#s5-act", 57.13);
+      }
+
+      // ── 字幕 ────────────────────────────────────
+      document.querySelectorAll("#captions p").forEach((p) => {
+        tl.set(p, { opacity: 1 }, +p.dataset.s);
+        tl.set(p, { opacity: 0 }, Math.min(+p.dataset.e, 59));
+      });
+
+      tl.set({}, {}, 59);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

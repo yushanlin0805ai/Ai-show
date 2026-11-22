@@ -1,0 +1,122 @@
+{
+  "title": "同樣是牡羊座，適合的副業也不同？",
+  "brand": "zodiac",
+  "mode": "B",
+  "source": {
+    "file": "inputs/MTVideo.mp4",
+    "drive": "https://drive.google.com/file/d/1jl5HFbQ-TNHgtVG4eYMnwheh94drGRzB/view"
+  },
+  "cta": {
+    "question": "好奇自己適合什麼樣的副業？",
+    "action": "留言「測驗」，我把免費測驗傳給你！",
+    "keyword": "副業"
+  },
+  "caption": {
+    "px": 60,
+    "line_units": 15.5,
+    "keywords": [
+      "太陽星座",
+      "月亮星座",
+      "牡羊座",
+      "巨蟹座",
+      "獅子座",
+      "處女座",
+      "適性測驗",
+      "安全感",
+      "低風險",
+      "副業",
+      "相同",
+      "不同"
+    ]
+  },
+  "segments": [
+    {
+      "id": "broll-01",
+      "start": 0.0,
+      "end": 4.27,
+      "kind": "overlay",
+      "place": "臉上方圖卡區",
+      "line": "兩個人都是牡羊座…也可能完全不一樣"
+    },
+    {
+      "id": "cut-01",
+      "start": 4.27,
+      "end": 7.85,
+      "kind": "cutaway",
+      "place": "全螢幕",
+      "line": "除了太陽星座之外…就是月亮星座／舉個例子"
+    },
+    {
+      "id": "broll-02",
+      "start": 7.85,
+      "end": 16.21,
+      "kind": "overlay",
+      "place": "臉上方圖卡區",
+      "line": "太陽是牡羊座…月亮是巨蟹座…需要安全感"
+    },
+    {
+      "id": "cut-02",
+      "start": 16.21,
+      "end": 19.11,
+      "kind": "cutaway",
+      "place": "全螢幕",
+      "line": "即使很想嘗試，也會擔心失敗、擔心收入不穩定"
+    },
+    {
+      "id": "broll-03",
+      "start": 19.11,
+      "end": 22.39,
+      "kind": "overlay",
+      "place": "臉上方圖卡區",
+      "line": "更適合從低風險、慢慢累積成果的副業開始"
+    },
+    {
+      "id": "broll-04",
+      "start": 22.39,
+      "end": 31.29,
+      "kind": "overlay",
+      "place": "臉上方圖卡區",
+      "line": "太陽是獅子座…月亮是處女座…擔心做得不夠好"
+    },
+    {
+      "id": "cut-03",
+      "start": 31.29,
+      "end": 35.49,
+      "kind": "cutaway",
+      "place": "全螢幕",
+      "line": "很想經營自媒體…遲遲不敢發布"
+    },
+    {
+      "id": "cut-04",
+      "start": 35.49,
+      "end": 40.75,
+      "kind": "cutaway",
+      "place": "全螢幕",
+      "line": "有沒有發現…太陽星座相同，月亮星座不同"
+    },
+    {
+      "id": "broll-05",
+      "start": 46.49,
+      "end": 53.53,
+      "kind": "overlay",
+      "place": "臉上方圖卡區",
+      "line": "免費測驗…副業方向"
+    },
+    {
+      "id": "broll-06",
+      "start": 53.53,
+      "end": 59.0,
+      "kind": "overlay",
+      "place": "臉上方圖卡區（CTA）",
+      "line": "好奇…留言「測驗」…我把測驗傳給你"
+    }
+  ],
+  "face_zone": {
+    "x0": 200,
+    "y0": 581,
+    "x1": 828,
+    "y1": 1241,
+    "frames": 59,
+    "detected": 55
+  }
+}

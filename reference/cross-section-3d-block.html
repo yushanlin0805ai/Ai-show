@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>立體切塊剖面範例（12 秒）</title>
+<!--
+  2.5D「立體切塊」剖面：課本式的皮膚切塊，慢慢轉角度 → 上面兩層掀起來 → 露出脂肪層 → 脂肪細胞變小。
+  不用 3D 引擎：每一層是一個長方體，用透視投影算出每個面在畫面上的位置，再把「平面剖面圖」貼到那個面上
+  （SVG matrix transform）。所以剖面零件庫的畫法（分層、脂肪細胞、肌肉條紋）可以直接貼到立體面上。
+  網址加 ?t=6 停在第 6 秒（抽格檢查用）。正式影片改寫成 Hyperframes composition 時，frame(t) 整段照搬，
+  由 GSAP timeline 的 onUpdate 呼叫即可。
+-->
+<style>
+  @font-face { font-family: "Noto Sans TC"; font-weight: 700; src: url("../fonts/NotoSansTC-Bold.otf"); }
+  @font-face { font-family: "Noto Sans TC"; font-weight: 900; src: url("../fonts/NotoSansTC-Black.otf"); }
+  :root { --bg: #172A3A; --ink: #F4F1E8; --r3: #E9C46A; --muted: #B9C7D1; }
+  html, body { margin: 0; height: 100%; background: #0E1A24; }
+  body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #stage { position: relative; width: 1080px; height: 1920px; background: var(--bg); overflow: hidden;
+           font-family: "Noto Sans TC", sans-serif; color: var(--ink); transform-origin: center; }
+  #title { position: absolute; top: 230px; width: 100%; text-align: center; font-size: 92px; font-weight: 900; }
+  svg#scene { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  .lbl { font: 700 38px "Noto Sans TC", sans-serif; fill: var(--ink); }
+  #cap { position: absolute; top: 1390px; left: 76px; right: 76px; text-align: center; font-size: 69px; font-weight: 700; line-height: 1.35; }
+  #cap b { color: var(--r3); font-weight: 900; }
+  #fn { position: absolute; top: 1312px; width: 100%; text-align: center; font-size: 34px; font-weight: 700; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="title">皮膚底下長什麼樣？</div>
+  <svg id="scene" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="g-dermis" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A3536"/><stop offset="1" stop-color="#5E2729"/></linearGradient>
+      <pattern id="p-muscle" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(-20)">
+        <rect width="22" height="22" fill="#9E4444"/><rect width="6" height="22" fill="#B65A5A"/></pattern>
+    </defs>
+    <g id="world"></g>
+    <g id="labels"></g>
+  </svg>
+  <div id="fn"></div>
+  <div id="cap"></div>
+</div>
+
+<script>
+const DUR = 12, NS = "http://www.w3.org/2000/svg";
+const $ = (s) => document.querySelector(s);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const io = (p) => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+const out = (p) => 1 - Math.pow(1 - p, 3);
+
+// ── 切塊尺寸（3D 單位＝px）與分層 ───────────────────────────
+const W = 560, D = 400;
+const LAYERS = [                         // 由上而下
+  { id: "epi",    name: "表皮",     h: 28,  fill: "#E8A79A" },
+  { id: "dermis", name: "真皮",     h: 150, fill: "url(#g-dermis)" },
+  { id: "fat",    name: "皮下脂肪", h: 190, fill: "#EDBE5E" },
+  { id: "muscle", name: "肌肉",     h: 110, fill: "url(#p-muscle)" },
+];
+let z = 0; for (const L of LAYERS) { L.z0 = z; z += L.h; L.z1 = z; }
+
+// 脂肪細胞（蜂巢排列，平面座標），每個面各一組
+const CELL_R = 21;
+function hexCells(w, h) {
+  const cells = [], dx = CELL_R * 1.85, dy = CELL_R * 1.6;
+  for (let r = 0, y = CELL_R * .6; y < h + CELL_R; r++, y += dy)
+    for (let x = (r % 2 ? dx / 2 : 0) - 4; x < w + CELL_R; x += dx) cells.push([x, y]);
+  return cells;
+}
+const fatFront = hexCells(W, 190), fatSide = hexCells(D, 190), fatTop = hexCells(W, D);
+const HERO = fatTop.reduce((b, c) => Math.hypot(c[0] - W * .55, c[1] - D * .45) < Math.hypot(b[0] - W * .55, b[1] - D * .45) ? c : b);
+// 表皮上的毛孔與汗毛（平面座標）
+const pores = Array.from({ length: 22 }, (_, i) => [(i * 211 + 37) % (W - 60) + 30, (i * 127 + 53) % (D - 60) + 30]);
+
+// ── 投影：yaw 轉角度、pitch 俯角 ─────────────────────────────
+let CAM = { yaw: 0, pitch: .62, cx: 540, cy: 740 }, DY = 0;
+function P(x, y, zz) {           // 3D → 畫面座標（x 往右、y 往後、z 往下）
+  const X = x - W / 2, Y = y + DY - D / 2, c = Math.cos(CAM.yaw), s = Math.sin(CAM.yaw);
+  const rx = X * c - Y * s, ry = X * s + Y * c;
+  return [CAM.cx + rx, CAM.cy + zz * Math.cos(CAM.pitch) - ry * Math.sin(CAM.pitch)];
+}
+// 把「平面圖」貼到一個面：O 為原點，U、V 為兩個邊的 3D 終點，平面圖大小 w×h
+function faceG(O, U, V, w, h) {
+  const o = P(...O), u = P(...U), v = P(...V);
+  const g = document.createElementNS(NS, "g");
+  g.setAttribute("transform", `matrix(${(u[0] - o[0]) / w} ${(u[1] - o[1]) / w} ${(v[0] - o[0]) / h} ${(v[1] - o[1]) / h} ${o[0]} ${o[1]})`);
+  return g;
+}
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e); return e;
+}
+let clipN = 0;
+function paintSide(g, L, w, cells, shade, cellScale) {
+  const cid = "c" + (clipN++);
+  el("rect", { x: 0, y: 0, width: w, height: L.h }, el("clipPath", { id: cid }, g));
+  const inner = el("g", { "clip-path": `url(#${cid})` }, g);
+  el("rect", { x: 0, y: 0, width: w, height: L.h, fill: L.fill }, inner);
+  if (L.id === "dermis") {
+    for (const yy of [45, 95]) el("path", { d: `M0 ${yy} Q ${w / 2} ${yy + 8} ${w} ${yy}`, stroke: "#000", "stroke-opacity": .14, "stroke-width": 3, fill: "none" }, inner);
+    for (let x = 70; x < w; x += 190) { el("circle", { cx: x, cy: 120, r: 13, fill: "#C8423B" }, inner); el("circle", { cx: x - 3, cy: 117, r: 4, fill: "#fff", "fill-opacity": .25 }, inner); }
+  }
+  if (L.id === "fat" && cells) for (const [x, y] of cells)
+    el("circle", { cx: x, cy: y, r: CELL_R * .93 * cellScale, fill: "#F2C76B", stroke: "#C99A3E", "stroke-width": 2.5 }, inner);
+  if (shade) el("rect", { x: 0, y: 0, width: w, height: L.h, fill: "#000", "fill-opacity": shade }, inner);
+  el("rect", { x: 0, y: 0, width: w, height: L.h, fill: "none", stroke: "#000", "stroke-opacity": .25, "stroke-width": 2 }, g);
+}
+function paintTop(g0, L, cellScale, heroOn) {
+  const cid = "c" + (clipN++);
+  el("rect", { x: 0, y: 0, width: W, height: D }, el("clipPath", { id: cid }, g0));
+  const g = el("g", { "clip-path": `url(#${cid})` }, g0);
+  el("rect", { x: 0, y: 0, width: W, height: D, fill: L.id === "epi" ? "#E8A79A" : L.fill }, g);
+  if (L.id === "epi") for (const [x, y] of pores) el("circle", { cx: x, cy: y, r: 3.5, fill: "#B9776C" }, g);
+  if (L.id === "fat") {
+    for (const [x, y] of fatTop) el("circle", { cx: x, cy: y, r: CELL_R * .93 * cellScale, fill: "#F2C76B", stroke: "#C99A3E", "stroke-width": 2.5 }, g);
+    if (heroOn > 0) {
+      el("circle", { cx: HERO[0], cy: HERO[1], r: CELL_R * .93 * cellScale, fill: "#E9C46A" }, g);
+      el("circle", { cx: HERO[0], cy: HERO[1], r: CELL_R * cellScale + 7, fill: "none", stroke: "#fff", "stroke-width": 5, opacity: heroOn }, g);
+    }
+  }
+  el("rect", { x: 0, y: 0, width: W, height: D, fill: "#fff", "fill-opacity": .06 }, g);   // 頂面稍亮，像打光
+  el("rect", { x: 0, y: 0, width: W, height: D, fill: "none", stroke: "#000", "stroke-opacity": .2, "stroke-width": 2 }, g);
+}
+
+// 一層＝一個長方體。dz：往上抬多少（掀開用）
+function drawLayer(root, L, dz, cellScale, heroOn) {
+  const z0 = L.z0 - dz, z1 = L.z1 - dz, c = Math.cos(CAM.yaw), s = Math.sin(CAM.yaw);
+  // 側面：法向量轉到朝向鏡頭（ry < 0）才畫
+  const sides = [
+    { n: [0, -1], O: [0, 0, z0], U: [W, 0, z0], V: [0, 0, z1], w: W, cells: fatFront, shade: 0 },      // 前
+    { n: [1, 0],  O: [W, 0, z0], U: [W, D, z0], V: [W, 0, z1], w: D, cells: fatSide, shade: .2 },      // 右
+    { n: [-1, 0], O: [0, D, z0], U: [0, 0, z0], V: [0, D, z1], w: D, cells: fatSide, shade: .2 },      // 左
+  ];
+  for (const f of sides) {
+    const ry = f.n[0] * s + f.n[1] * c;
+    if (ry >= -0.01) continue;
+    const g = faceG(f.O, f.U, f.V, f.w, L.h); root.appendChild(g);
+    paintSide(g, L, f.w, f.cells, f.shade, cellScale);
+  }
+  const top = faceG([0, 0, z0], [W, 0, z0], [0, D, z0], W, D); root.appendChild(top);
+  paintTop(top, L, cellScale, heroOn);
+}
+
+// ── 時間軸 ────────────────────────────────────────────────
+const CAPS = [
+  [0, "把皮膚切一塊下來看"],
+  [2.0, "最上面薄薄一層是<b>表皮</b>，<br>下面是有血管的<b>真皮</b>"],
+  [4.2, "再往下是<b>皮下脂肪</b>，<br>最底層是<b>肌肉</b>"],
+  [6.2, "把上面兩層掀開，"],
+  [7.6, "一顆一顆的就是<b>脂肪細胞</b>"],
+  [9.2, "變瘦時，它們會<b>變小</b>，<br>但數量幾乎不變"],
+];
+function frame(t) {
+  // 鏡頭：慢慢轉角度（-28° → +18°），掀開時稍微抬高俯角
+  CAM.yaw = (-28 + 46 * io(prog(t, .3, 11))) * Math.PI / 180;
+  CAM.pitch = .62 + .16 * io(prog(t, 6.2, 7.6));
+  CAM.cy = 740 + 40 * out(1 - prog(t, 0, 1.0));      // 進場時從下往上浮起
+  const lp = io(prog(t, 6.2, 7.6));
+  const lift = 250 * lp, back = 230 * lp;               // 表皮＋真皮往上抬、往後退，露出脂肪層頂面
+  const cellScale = 1 - .38 * io(prog(t, 9.2, 11)) + .015 * Math.sin(t * 2.4);
+  const heroOn = prog(t, 7.6, 8.1);
+
+  const world = $("#world"); world.textContent = ""; clipN = 0;
+  world.setAttribute("opacity", out(prog(t, 0, .8)) * (1 - prog(t, 11.6, 12)));
+  // 由下往上畫（上層會蓋住下層）
+  for (const L of [...LAYERS].reverse()) {
+    const up = L.id === "epi" || L.id === "dermis";
+    DY = up ? back : 0;
+    drawLayer(world, L, up ? lift : 0, cellScale, heroOn);
+  }
+  DY = back;
+  // 汗毛：從表皮頂面往上的細線（跟著上層一起抬）
+  for (const [x, y] of pores.slice(0, 7)) {
+    const a = P(x, y, -lift), b = P(x + 5, y, -lift - 22);
+    el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#7A4A40", "stroke-width": 2.5, "stroke-linecap": "round", opacity: .8 }, world);
+  }
+
+  // 標籤：從切塊左前方的邊拉線出去
+  const labels = $("#labels"); labels.textContent = "";
+  const tag = (text, pt, at, off, y0) => {
+    const p = prog(t, at, at + .4) * (1 - prog(t, off, off + .3)); if (p <= 0) return;
+    const lx = 70, ly = y0;
+    el("path", { d: `M${lx + 4} ${ly + 14} L ${lx + 150} ${ly + 14} L ${pt[0]} ${pt[1]}`, stroke: "#F4F1E8", "stroke-opacity": .75 * p, "stroke-width": 3, fill: "none" }, labels);
+    el("circle", { cx: pt[0], cy: pt[1], r: 8, fill: "#F4F1E8", opacity: p }, labels);
+    el("text", { class: "lbl", x: lx, y: ly, opacity: p }, labels).textContent = text;
+  };
+  const mid = (L) => { const up = L.id === "epi" || L.id === "dermis"; DY = up ? back : 0; const r = P(0, 0, (L.z0 + L.z1) / 2 - (up ? lift : 0)); DY = 0; return r; };
+  tag("表皮", mid(LAYERS[0]), 2.0, 6.0, 470);
+  tag("真皮", mid(LAYERS[1]), 2.6, 6.0, 600);
+  tag("皮下脂肪", mid(LAYERS[2]), 4.2, 6.0, 800);
+  tag("肌肉", mid(LAYERS[3]), 4.8, 6.0, 1000);
+  DY = 0;
+  tag("脂肪細胞", P(HERO[0], HERO[1], LAYERS[2].z0), 7.8, 11.5, 1120);
+
+  $("#title").style.opacity = out(prog(t, 0, .5)) * (1 - prog(t, 5.6, 6.0));
+  $("#fn").textContent = t >= 9.2 ? "Spalding et al., Nature, 2008" : "";
+  $("#fn").style.opacity = prog(t, 9.2, 9.6);
+  const cap = CAPS.filter(([a]) => t >= a).pop();
+  if ($("#cap").dataset.at !== String(cap[0])) { $("#cap").innerHTML = cap[1]; $("#cap").dataset.at = cap[0]; }
+  $("#stage").style.opacity = 1 - prog(t, 11.6, 12);
+}
+
+function fit() { const k = Math.min(innerWidth / 1080, innerHeight / 1920); $("#stage").style.transform = `scale(${k})`; }
+addEventListener("resize", fit); fit();
+const seek = new URLSearchParams(location.search).get("t");
+if (seek !== null) frame(parseFloat(seek));
+else { const t0 = performance.now(); (function loop(now) { frame(((now - t0) / 1000) % DUR); requestAnimationFrame(loop); })(t0); }
+</script>
+</body>
+</html>

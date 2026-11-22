@@ -1,0 +1,43 @@
+# 素材與成品不進 Git（用雲端硬碟傳給夥伴）
+projects/*/inputs/*.m4a
+projects/*/inputs/*.mp3
+projects/*/inputs/*.wav
+projects/*/inputs/*.aac
+projects/*/inputs/*.mp4
+projects/*/inputs/*.mov
+projects/*/inputs/*.MOV
+projects/*/output/
+projects/*/storyboard/faces/
+projects/*/composition/renders/
+projects/*/composition/.hyperframes/
+# prepare-composition.py 會自動複製進來的檔案（字型、GSAP、音檔）
+projects/*/composition/vendor/
+projects/*/composition/fonts/
+projects/*/composition/*.m4a
+projects/*/composition/*.mp3
+projects/*/composition/*.wav
+projects/*/composition/*.mp4
+projects/*/composition/*.mov
+projects/*/composition/AGENTS.md
+
+
+
+node_modules/
+__pycache__/
+.DS_Store
+
+# 樣張專案：複製進來的字型與 GSAP、含講者畫面的截圖不進 Git
+projects/*/samples/fonts/
+projects/*/samples/vendor/
+projects/*/samples/assets/
+projects/*/samples/index.html
+projects/*/samples/AGENTS.md
+projects/*/storyboard/samples/
+
+# Hyperframes 轉檔快取（影片）、含講者畫面的 QA 截圖
+projects/*/composition/.transcode-cache/
+projects/*/storyboard/qa-frames/
+projects/*/storyboard/qa-sheet.jpg
+projects/*/storyboard/qa-final-facebox.jpg
+projects/*/composition-overlay/
+projects/*/composition-captions/
