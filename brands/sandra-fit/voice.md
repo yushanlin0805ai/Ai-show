@@ -27,7 +27,7 @@
 - **絕對不說的話：** compliance.md 的禁用詞；負面、批判的字眼；「吃這個就會瘦」
 - **Emoji：** 🥗 💪 ✈️
 - **出鏡：** 本人實拍口播為主
-- **Fish Audio 聲音 ID：** 892b6895ec984aaa827c1c9cec5c2818（清新文艺少女音）
+- **Fish Audio 聲音 ID：** 892b6895ec984aaa827c1c9cec5c2818（清新文艺少女音，舊的）；**目前改用「參考錄音」方式**：每次產生配音時附上本人錄音 `projects/busy-diet/inputs/voice-self.m4a`（腳本見 `projects/busy-diet/storyboard/ref-tts.py`，需要 `pip install msgpack`）。帳戶加值 API 點數後可正式建立「宇姍教練」聲音模型
 - **AI 配音模型：** 免費版（`--free`）；之後本人照腳本錄音替換
 - **配音稿讀音：** 名字寫成「雨山」給 AI 唸（字幕仍寫「宇姍」）
 

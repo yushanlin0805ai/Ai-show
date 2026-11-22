@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="zh-Hant" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <!-- GSAP 由 prepare-composition.py 從 node_modules 複製（不走 CDN） -->
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Noto Sans TC"; font-weight: 400; src: url("fonts/NotoSansTC-Regular.otf"); }
+      @font-face { font-family: "Noto Sans TC"; font-weight: 700; src: url("fonts/NotoSansTC-Bold.otf"); }
+      @font-face { font-family: "Noto Sans TC"; font-weight: 900; src: url("fonts/NotoSansTC-Black.otf"); }
+      @font-face { font-family: "Noto Color Emoji"; src: url("fonts/NotoColorEmoji.ttf"); }
+
+      /* 配色：brands/sandra-fit/brand.md */
+      :root {
+        --bg: #e9d8c2; --ink: #3b2f27; --hi: #ffffff; --muted: #7a6a5c;
+        --r1: #8a5a44; --r2: #a07d38; --r3: #c9566a; --r4: #6b7f72;
+        --soft: rgba(59, 47, 39, 0.08);
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+      body { font-family: "Noto Sans TC", "Noto Color Emoji", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+      #root { position: relative; width: 1080px; height: 1920px; background: var(--bg); overflow: hidden; }
+      .scene { position: absolute; inset: 0; }
+      .abs { position: absolute; }
+      .emo { font-family: "Noto Color Emoji", sans-serif; line-height: 1; }
+
+      .title { left: 65px; top: 220px; font-size: 104px; font-weight: 900; letter-spacing: 0.02em; line-height: 1.2; }
+      .pill {
+        display: inline-flex; align-items: center; gap: 12px; white-space: nowrap;
+        background: var(--ink); color: var(--bg); border-radius: 999px;
+        padding: 13px 37px; font-size: 41px; font-weight: 900; line-height: 1.2;
+      }
+      .badge {
+        width: 86px; height: 86px; border-radius: 50%; background: var(--ink); color: var(--bg);
+        display: grid; place-items: center; font-size: 60px; font-weight: 900; line-height: 1;
+      }
+      .card {
+        background: var(--soft); border-radius: 36px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;
+      }
+      .footnote { left: 76px; right: 76px; text-align: center; font-size: 37px; font-weight: 700; color: var(--muted); }
+      .ring { position: absolute; border: 10px solid var(--r3); border-radius: 60px; }
+
+      /* 餐盤 */
+      .cell {
+        border-radius: 36px; background: var(--soft); color: var(--ink);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      }
+      .cell .emo { font-size: 110px; }
+      .cell b { font-size: 50px; font-weight: 900; }
+      .num { position: absolute; left: -22px; top: -22px; width: 76px; height: 76px; font-size: 50px; }
+
+      /* 色條 */
+      .row {
+        left: 65px; width: 950px; height: 170px; border-radius: 30px;
+        display: flex; align-items: center; color: var(--hi);
+      }
+      .row .lab { width: 290px; padding-left: 40px; flex: none; font-size: 60px; font-weight: 900; }
+      .slot { display: flex; gap: 18px; }
+      .chip {
+        width: 190px; height: 140px; border-radius: 24px; background: var(--bg); color: var(--ink);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+        font-size: 34px; font-weight: 700; white-space: nowrap;
+      }
+      .chip .emo { font-size: 62px; }
+
+      /* 自助餐步驟 */
+      .step {
+        left: 65px; width: 950px; height: 200px; border-radius: 36px; background: var(--soft);
+        display: flex; align-items: center; gap: 36px; padding-left: 50px;
+      }
+      .step .badge { flex: none; }
+      .step .emo { font-size: 110px; }
+      .step b { font-size: 76px; font-weight: 900; }
+
+      #captions { position: absolute; left: 76px; right: 76px; top: 1375px; height: 205px; }
+      #captions p {
+        position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center;
+        text-align: center; font-size: 69px; font-weight: 700; line-height: 1.35; text-wrap: balance; opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="52.13" data-width="1080" data-height="1920">
+
+      <audio id="voice" src="voice-self.m4a" data-start="0" data-duration="51.13" data-track-index="9" data-volume="1"></audio>
+
+      <!-- S1：開場標題（0–3.58） -->
+      <section id="g1" class="clip scene" data-start="0" data-duration="4.64" data-track-index="1">
+        <h1 id="s1-title" class="abs title">忙到沒空煮<br />怎麼<span style="color:var(--r3)">飲控</span>？</h1>
+        <div id="s1-card" class="abs card" style="left:340px;top:640px;width:400px;height:420px">
+          <span class="emo" style="font-size:210px">⏰</span>
+          <span style="font-size:52px;font-weight:900">沒時間</span>
+          <div id="s1-q" class="abs badge" style="right:-30px;top:-40px">?</div>
+        </div>
+      </section>
+
+      <!-- S2：本人經歷（3.58–10.24） -->
+      <section id="g2" class="clip scene" data-start="4.64" data-duration="5.34" data-track-index="1">
+        <div id="s2-mon" class="abs pill" style="left:65px;top:250px;font-size:60px;padding:14px 44px">5 個月</div>
+        <div id="s2-planes" class="abs" style="left:70px;top:420px;width:940px;display:flex;gap:20px">
+          <div class="plane card" style="width:140px;height:140px"><span class="emo" style="font-size:80px">✈️</span></div>
+          <div class="plane card" style="width:140px;height:140px"><span class="emo" style="font-size:80px">✈️</span></div>
+          <div class="plane card" style="width:140px;height:140px"><span class="emo" style="font-size:80px">✈️</span></div>
+          <div class="plane card" style="width:140px;height:140px"><span class="emo" style="font-size:80px">✈️</span></div>
+          <div class="plane card" style="width:140px;height:140px"><span class="emo" style="font-size:80px">✈️</span></div>
+          <div class="plane card" style="width:140px;height:140px"><span class="emo" style="font-size:80px">✈️</span></div>
+        </div>
+        <div id="s2-six" class="abs" style="left:65px;top:600px;font-size:60px;font-weight:700">出國 <span style="font-size:110px;font-weight:900;color:var(--r3)">6 次</span></div>
+        <div id="s2-a" class="abs card" style="left:65px;top:820px;width:290px;height:330px">
+          <span class="emo" style="font-size:120px">💼</span><span style="font-size:54px;font-weight:900">開會</span>
+        </div>
+        <div id="s2-b" class="abs card" style="left:395px;top:820px;width:290px;height:330px">
+          <span class="emo" style="font-size:120px">🧳</span><span style="font-size:54px;font-weight:900">出差</span>
+        </div>
+        <div id="s2-c" class="abs card" style="left:725px;top:820px;width:290px;height:330px;background:var(--r3);color:var(--hi)">
+          <span class="emo" style="font-size:120px">🍱</span><span style="font-size:54px;font-weight:900">外食</span>
+        </div>
+      </section>
+
+      <!-- S3＋S4：餐盤三件事（10.24–26.12） -->
+      <section id="g3" class="clip scene" data-start="9.98" data-duration="14.86" data-track-index="1">
+        <div id="s3-cal" class="abs pill" style="left:65px;top:220px;background:var(--r4);color:var(--hi)">✕ 不算熱量</div>
+        <h1 id="s3-title" class="abs title" style="top:320px;font-size:96px">只看餐盤 <span style="color:var(--r3)">3</span> 件事</h1>
+        <div id="s3-plate" class="abs" style="left:65px;top:530px;width:700px;height:660px;border-radius:60px;border:6px solid rgba(59,47,39,0.3)"></div>
+        <div id="c-pro" class="abs cell" style="left:95px;top:560px;width:640px;height:220px;flex-direction:row;gap:30px">
+          <span class="emo">✋</span><b>一掌心蛋白質</b>
+          <div class="badge num">1</div>
+        </div>
+        <div id="c-veg" class="abs cell" style="left:95px;top:810px;width:295px;height:350px">
+          <span class="emo">🥬</span><b>蔬菜</b>
+          <div class="badge num">2</div>
+        </div>
+        <div id="c-eq" class="abs" style="left:390px;top:930px;width:50px;text-align:center;font-size:80px;font-weight:900">＝</div>
+        <div id="c-rice" class="abs cell" style="left:440px;top:810px;width:295px;height:350px">
+          <span class="emo">🍚</span><b>飯</b>
+        </div>
+        <div id="c-nut" class="abs cell" style="left:800px;top:700px;width:230px;height:230px;border-radius:50%">
+          <span class="emo" style="font-size:96px">🥜</span><b style="font-size:38px">一茶匙</b>
+          <div class="badge num" style="left:-10px;top:-10px">3</div>
+        </div>
+        <div id="c-oil" class="abs pill" style="left:810px;top:960px;padding:13px 30px">好油脂</div>
+        <div id="s4-ring" class="ring" data-layout-allow-overlap style="left:40px;top:505px;width:1015px;height:710px"></div>
+      </section>
+
+      <!-- 出處註腳：從「我的餐盤」一路留到便利商店結束（25.34–34.98） -->
+      <div id="fn" class="clip abs footnote" data-start="23.80" data-duration="9.28" data-track-index="2" style="top:1262px">出處：衛生福利部國民健康署「我的餐盤」</div>
+
+      <!-- S5：便利商店（26.12–34.98） -->
+      <section id="g5" class="clip scene" data-start="24.84" data-duration="8.24" data-track-index="1">
+        <h1 id="s5-title" class="abs title" style="font-size:92px"><span class="emo">🏪</span> 便利商店也可以</h1>
+        <div id="r-pro" class="abs row" style="top:390px;background:var(--r3)">
+          <div class="lab">蛋白質</div>
+          <div class="slot">
+            <div id="k-egg" class="chip"><span class="emo">🥚</span>茶葉蛋</div>
+            <div id="k-soy" class="chip"><span class="emo">🥛</span>無糖豆漿</div>
+          </div>
+        </div>
+        <div id="r-veg" class="abs row" style="top:584px;background:var(--r4)">
+          <div class="lab">蔬菜</div>
+          <div class="slot"><div id="k-sal" class="chip"><span class="emo">🥗</span>生菜沙拉</div></div>
+        </div>
+        <div id="r-rice" class="abs row" style="top:778px;background:var(--r2)">
+          <div class="lab">飯</div>
+          <div class="slot"><div id="k-ball" class="chip"><span class="emo">🍙</span>飯糰</div></div>
+        </div>
+        <div id="r-oil" class="abs row" style="top:972px;background:var(--r1)">
+          <div class="lab">好油脂</div>
+          <div class="slot"><div id="k-nut" class="chip" style="width:230px"><span class="emo">🥜</span>無調味堅果</div></div>
+        </div>
+      </section>
+
+      <!-- S6：自助餐順序（34.98–39.70） -->
+      <section id="g6" class="clip scene" data-start="33.08" data-duration="4.38" data-track-index="1">
+        <h1 id="s6-title" class="abs title" style="font-size:92px"><span class="emo">🍽️</span> 自助餐順序</h1>
+        <div id="st1" class="abs step" style="top:420px"><div class="badge">1</div><span class="emo">🥬</span><b>先夾菜</b></div>
+        <div id="st2" class="abs step" style="top:660px"><div class="badge">2</div><span class="emo">🍗</span><b>再夾肉</b></div>
+        <div id="st3" class="abs step" style="top:900px;background:var(--r3);color:var(--hi)"><div class="badge">3</div><span class="emo">🍚</span><b>最後裝飯</b></div>
+      </section>
+
+      <!-- S7：觀念（39.70–43.06） -->
+      <section id="g7" class="clip scene" data-start="37.46" data-duration="3.18" data-track-index="1">
+        <div id="s7-emo" class="abs emo" style="left:0;right:0;top:620px;text-align:center;font-size:300px">💪</div>
+      </section>
+
+      <!-- S8：結尾 CTA（43.06–53.92）；文字由 project.json 填入 -->
+      <section id="g8" class="clip scene" data-start="40.64" data-duration="11.49" data-track-index="1">
+        <div id="s8-name" class="abs" style="left:0;right:0;top:240px;text-align:center"><span class="pill" style="font-size:48px">宇姍教練</span></div>
+        <div id="s8-q" class="abs" data-cta="question" style="left:65px;right:65px;top:380px;text-align:center;font-size:80px;font-weight:900;line-height:1.3;text-wrap:balance">你希望的是短期瘦下來，還是長期可以維持體態？</div>
+        <div id="s8-short" class="abs pill" style="left:200px;top:740px;background:var(--r4);color:var(--hi);font-size:48px">短期</div>
+        <div id="s8-long" class="abs pill" style="right:200px;top:740px;background:var(--r3);color:var(--hi);font-size:48px">長期 ✓</div>
+        <div id="s8-card" class="abs" style="left:80px;top:880px;width:920px;height:340px;border-radius:48px;background:var(--hi);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:24px">
+          <span class="emo" style="font-size:100px">💬</span>
+          <span style="font-size:80px;font-weight:900">留言</span>
+          <span id="s8-kw" data-cta="keyword" style="display:inline-block;background:var(--r3);color:var(--hi);border-radius:40px;padding:10px 34px;font-size:96px;font-weight:900;line-height:1.15">體態管理</span>
+        </div>
+        <div id="s8-act" class="abs" data-cta="action-tail" style="left:65px;right:65px;top:1250px;text-align:center;font-size:60px;font-weight:700">領取 7 天減脂懶人包！</div>
+      </section>
+
+      <!-- 字幕（prepare-composition.py 依 transcript.srt 產生） -->
+      <div id="captions" class="clip" data-start="0" data-duration="52.13" data-track-index="5" data-hide-from="41.94">
+        <!-- CAPTIONS:BEGIN -->
+        <p data-s="1.36" data-e="3.38">每天忙到沒時間煮</p>
+        <p data-s="3.38" data-e="4.64">到底怎麼飲控？</p>
+        <p data-s="4.64" data-e="7.28">像我自己，五個月出國了六次</p>
+        <p data-s="7.28" data-e="9.98">平常開會、出差，幾乎都外食</p>
+        <p data-s="9.98" data-e="11.24">我不算熱量</p>
+        <p data-s="11.24" data-e="13.18">只看餐盤上的三件事</p>
+        <p data-s="13.18" data-e="15.72">第一，一個掌心大的蛋白質</p>
+        <p data-s="15.72" data-e="18.22">第二，蔬菜跟飯一樣多</p>
+        <p data-s="18.22" data-e="20.08">第三，一茶匙堅果</p>
+        <p data-s="20.08" data-e="21.50">補一點好油脂</p>
+        <p data-s="21.50" data-e="22.58">這三件事</p>
+        <p data-s="22.58" data-e="24.84">來自國健署的「我的餐盤」</p>
+        <p data-s="24.84" data-e="26.44">便利商店也做得到</p>
+        <p data-s="26.44" data-e="28.12">茶葉蛋或無糖豆漿</p>
+        <p data-s="28.12" data-e="29.60">加一盒生菜沙拉</p>
+        <p data-s="29.60" data-e="30.60">配一個飯糰</p>
+        <p data-s="30.60" data-e="33.08">再一小包無調味堅果</p>
+        <p data-s="33.08" data-e="36.14">自助餐就先夾菜，再夾一份肉</p>
+        <p data-s="36.14" data-e="37.46">最後才裝飯</p>
+        <p data-s="37.46" data-e="39.30">飲控不是多花時間</p>
+        <p data-s="39.30" data-e="40.64">是多一個習慣</p>
+        <p data-s="40.64" data-e="41.94">我是宇姍教練</p>
+        <p data-s="41.94" data-e="44.06">你希望的是短期瘦下來</p>
+        <p data-s="44.06" data-e="46.34">還是長期可以維持體態？</p>
+        <p data-s="46.34" data-e="47.84">留言「體態管理」</p>
+        <p data-s="47.84" data-e="50.12">領取 7 天減脂懶人包！</p>
+        <!-- CAPTIONS:END -->
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      const fadeUp = (s, t) => tl.fromTo(s, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, t);
+      const slideIn = (s, t) => tl.fromTo(s, { opacity: 0, x: -54 }, { opacity: 1, x: 0, duration: 0.45, ease: "power2.out" }, t);
+      const pop = (s, t) => tl.fromTo(s, { opacity: 0, y: -86, scale: 0.6 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2.2)" }, t);
+      const fadeIn = (s, t) => tl.fromTo(s, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "none" }, t);
+      const breathe = (s, t, end, scale = 1.025) => {
+        const n = Math.max(1, Math.floor((end - t) / 1.1));
+        tl.to(s, { scale, duration: 0.55, ease: "sine.inOut", yoyo: true, repeat: n * 2 - 1 }, t);
+      };
+
+      // S1（標題第 0 格就在）
+      pop("#s1-card", 2.38);
+      pop("#s1-q", 3.21);
+
+      // S2
+      fadeUp("#s2-mon", 4.70);
+      gsap.utils.toArray("#s2-planes .plane").forEach((c, i) => {
+        tl.fromTo(c, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 6.72 + i * 0.08);
+      });
+      fadeUp("#s2-six", 6.90);
+      pop("#s2-a", 7.68);
+      pop("#s2-b", 8.20);
+      pop("#s2-c", 9.36);
+
+      // S3
+      fadeUp("#s3-cal", 10.70);
+      fadeUp("#s3-title", 12.26);
+      fadeIn("#s3-plate", 12.46);
+      gsap.set(["#c-pro", "#c-veg", "#c-eq", "#c-rice", "#c-nut", "#c-oil", "#s4-ring"], { opacity: 0 });
+      pop("#c-pro", 13.18);
+      pop("#c-veg", 15.72);
+      pop("#c-rice", 17.14);
+      fadeIn("#c-eq", 17.43);
+      pop("#c-nut", 19.14);
+      fadeUp("#c-oil", 20.60);
+      // S4：光圈圈住完整餐盤
+      fadeIn("#s4-ring", 21.94);
+      breathe("#s4-ring", 22.24, 24.64, 1.01);
+      fadeIn("#fn", 23.80);
+
+      // S5
+      fadeUp("#s5-title", 24.89);
+      slideIn("#r-pro", 25.12);
+      slideIn("#r-veg", 25.53);
+      slideIn("#r-rice", 25.96);
+      slideIn("#r-oil", 26.47);
+      pop("#k-egg", 26.44);
+      pop("#k-soy", 27.68);
+      pop("#k-sal", 29.12);
+      pop("#k-ball", 30.12);
+      pop("#k-nut", 31.82);
+
+      // S6
+      fadeUp("#s6-title", 33.16);
+      slideIn("#st1", 34.48);
+      slideIn("#st2", 35.84);
+      slideIn("#st3", 35.95);
+
+      // S7
+      pop("#s7-emo", 37.56);
+      breathe("#s7-emo", 39.92, 40.59, 1.08);
+
+      // S8 CTA
+      fadeUp("#s8-name", 40.68);
+      fadeUp("#s8-q", 41.94);
+      pop("#s8-short", 42.80);
+      pop("#s8-long", 44.34);
+      pop("#s8-card", 46.34);
+      breathe("#s8-kw", 46.88, 52.01, 1.06);
+      fadeUp("#s8-act", 47.94);
+
+      const hideFrom = +document.getElementById("captions").dataset.hideFrom || Infinity;
+      document.querySelectorAll("#captions p").forEach((p) => {
+        const s = +p.dataset.s, e = Math.min(+p.dataset.e, hideFrom);
+        if (s >= hideFrom) return;
+        tl.set(p, { opacity: 1 }, s);
+        tl.set(p, { opacity: 0 }, e);
+      });
+
+      tl.set({}, {}, 52.13);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
