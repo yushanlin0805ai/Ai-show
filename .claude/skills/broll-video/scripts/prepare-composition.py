@@ -193,6 +193,12 @@ def main():
             link = out_dir / d
             if (comp / d).exists() and not link.exists():
                 link.symlink_to(Path("..") / comp.name / d)
+        # B-roll 實拍素材（overlay 模式還會用到的影片）也用捷徑指回去
+        if args.mode == "overlay":
+            for m in comp.iterdir():
+                link = out_dir / m.name
+                if m.is_file() and m.suffix.lower() in VIDEO_EXT and m.name in v and not link.exists():
+                    link.symlink_to(Path("..") / comp.name / m.name)
 
     mode = f"，模式 {args.mode}（{out_dir.name}/）" if args.mode else ""
     print(f"完成：{len(cues)} 則字幕、CTA「{cta['keyword']}」、字型與 GSAP 已就緒{mode} → {comp}")

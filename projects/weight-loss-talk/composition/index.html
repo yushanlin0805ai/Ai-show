@@ -206,7 +206,7 @@
 
         // S2：「產後」4.86、「16」6.30、「六次」8.60
         hide(["#s2-panel", "#s2-a", "#s2-b", "#s2-note"]);
-        fadeUp("#s2-panel", 4.1);
+        fadeUp("#s2-panel", 4.76);
         soft("#s2-a", 4.86);
         tl.fromTo("#s2-a b", { scale: 0.6 }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, 6.3);
         tl.fromTo("#s2-note", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 5.0);
@@ -230,7 +230,7 @@
         const xs = ["#s3-x1", "#s3-x2"].map($);
         xs.forEach((p) => { const l = p.getTotalLength(); gsap.set(p, { attr: { "stroke-dasharray": l, "stroke-dashoffset": l } }); });
         hide(["#s3-panel", "#s3-a", "#s3-arrow", "#s3-b"]);
-        fadeUp("#s3-panel", 20.15);
+        fadeUp("#s3-panel", 21.1);
         soft("#s3-a", 21.2);
         tl.fromTo("#s3-arrow", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4 }, 23.9);
         soft("#s3-b", 24.2);
@@ -240,7 +240,7 @@
 
         // S4：「回到」26.74、「維持」29.10、「習慣」30.22
         hide(["#s4-panel", "#s4-a", "#s4-loop", "#s4-b"]);
-        fadeUp("#s4-panel", 25.7);
+        fadeUp("#s4-panel", 26.64);
         soft("#s4-a", 26.74);
         tl.fromTo("#s4-loop", { opacity: 0, rotation: -180 }, { opacity: 1, rotation: 0, duration: 0.7, ease: "power2.out" }, 28.3);
         soft("#s4-b", 29.1);
