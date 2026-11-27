@@ -1,0 +1,15 @@
+{
+  "title": "宇姍教練－飲控不放棄生活",
+  "brand": "",
+  "mode": "B",
+  "source": "inputs/source.mp4",
+  "face_zone": {
+    "x0": 79,
+    "y0": 270,
+    "x1": 828,
+    "y1": 1100,
+    "frames": 39,
+    "detected": 39,
+    "note": "自動偵測 y318，往上補到 270 包住頭髮"
+  }
+}
