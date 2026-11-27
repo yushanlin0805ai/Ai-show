@@ -1,8 +1,11 @@
 {
-  "title": "宇姍教練－飲控不放棄生活",
+  "title": "飲控，不用拒絕聚餐",
   "brand": "",
   "mode": "B",
-  "source": "inputs/source.mp4",
+  "source": {
+    "file": "inputs/source.mp4",
+    "drive": "https://drive.google.com/file/d/13NB1-HyfiwyFNeHXNCUzhztCWsea-FOu/view"
+  },
   "face_zone": {
     "x0": 79,
     "y0": 270,
@@ -11,5 +14,84 @@
     "frames": 39,
     "detected": 39,
     "note": "自動偵測 y318，往上補到 270 包住頭髮"
-  }
+  },
+  "cta": {
+    "question": "宇姍教練",
+    "action": "私訊預約，一對一免費諮詢",
+    "keyword": "私訊預約"
+  },
+  "caption": {
+    "px": 64,
+    "line_units": 14.5,
+    "keywords": [
+      "飲控",
+      "16公斤",
+      "六次",
+      "聚餐",
+      "美食",
+      "豐盛",
+      "挨餓",
+      "習慣",
+      "長期生活",
+      "喜歡的事情"
+    ]
+  },
+  "segments": [
+    {
+      "id": "broll-01",
+      "start": 0.0,
+      "end": 4.04,
+      "kind": "overlay",
+      "place": "胸前圖卡區",
+      "line": "標題：飲控，不用拒絕聚餐"
+    },
+    {
+      "id": "broll-02",
+      "start": 4.04,
+      "end": 9.22,
+      "kind": "overlay",
+      "place": "胸前圖卡區",
+      "line": "產後五個月瘦了16公斤／出國六次"
+    },
+    {
+      "id": "cut-01",
+      "start": 9.22,
+      "end": 13.1,
+      "kind": "cutaway",
+      "place": "全螢幕",
+      "line": "朋友吃飯、出國旅行、工作聚餐（Pixabay）"
+    },
+    {
+      "id": "cut-02",
+      "start": 15.88,
+      "end": 20.1,
+      "kind": "cutaway",
+      "place": "全螢幕",
+      "line": "正常參加聚餐、享受美食（Pixabay）"
+    },
+    {
+      "id": "broll-03",
+      "start": 20.1,
+      "end": 25.64,
+      "kind": "overlay",
+      "place": "胸前圖卡區",
+      "line": "偶爾豐盛，隔天不用挨餓"
+    },
+    {
+      "id": "broll-04",
+      "start": 25.64,
+      "end": 30.78,
+      "kind": "overlay",
+      "place": "胸前圖卡區",
+      "line": "回到日常，維持原本的習慣"
+    },
+    {
+      "id": "broll-05",
+      "start": 35.48,
+      "end": 39.05,
+      "kind": "overlay",
+      "place": "胸前圖卡區（CTA）",
+      "line": "私訊預約，一對一免費諮詢"
+    }
+  ]
 }

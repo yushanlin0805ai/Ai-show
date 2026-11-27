@@ -4,6 +4,7 @@ projects/*/inputs/*.mp3
 projects/*/inputs/*.wav
 projects/*/inputs/*.aac
 projects/*/inputs/*.mp4
+projects/*/inputs/**/*.mp4
 projects/*/inputs/*.mov
 projects/*/inputs/*.MOV
 projects/*/output/

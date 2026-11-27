@@ -172,7 +172,10 @@ def main():
     out_dir = comp
     if args.mode in ("overlay", "captions"):
         v = text
-        v = re.sub(r"\s*<video\b[^>]*>.*?</video>", "", v, flags=re.S)            # 原片
+        # 只拿掉原片（id="footage"）；全螢幕 B-roll 的實拍素材（例：Pixabay）要留著
+        v = re.sub(r'\s*<video\b[^>]*\bid="footage"[^>]*>.*?</video>', "", v, flags=re.S)
+        if args.mode == "captions":
+            v = re.sub(r"\s*<video\b[^>]*>.*?</video>", "", v, flags=re.S)
         v, n = re.subn(r'class="mode-(composite|overlay|captions)"', f'class="mode-{args.mode}"', v, count=1)
         if not n:
             sys.exit('根元素需要 class="mode-composite"（透明版本靠它把背景改成透明）')

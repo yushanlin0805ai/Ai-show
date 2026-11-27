@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="zh-Hant" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <!-- weight-loss-talk：宇姍教練「飲控，不用拒絕聚餐」。確認單：storyboard/review.md
+         風格：溫柔（奶油白圓角卡、暖棕字、柔珊瑚強調）。沒有主特效、沒有音效、沒有配樂。
+         全螢幕 B-roll 是 Pixabay 實拍（inputs/bro-*.mp4，出處見 storyboard/licenses.md）。
+         模式由根元素 class 決定，prepare-composition.py --mode 切換。 -->
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Noto Sans TC"; font-weight: 400; src: url("fonts/NotoSansTC-Regular.otf"); }
+      @font-face { font-family: "Noto Sans TC"; font-weight: 700; src: url("fonts/NotoSansTC-Bold.otf"); }
+      @font-face { font-family: "Noto Sans TC"; font-weight: 900; src: url("fonts/NotoSansTC-Black.otf"); }
+      @font-face { font-family: "Noto Color Emoji"; src: url("fonts/NotoColorEmoji.ttf"); }
+      :root {
+        --cream: #fff8f1; --ink: #5a4336; --mute: rgba(90, 67, 54, .72); --coral: #e58e78; --rose: #f6d5c8;
+        --kw: #ffb23f; /* 字幕關鍵字：橘黃 */
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+      body { font-family: "Noto Sans TC", "Noto Color Emoji", sans-serif; color: var(--ink); }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root.mode-overlay, #root.mode-captions { background: transparent; }
+      #root.mode-overlay #captions { opacity: 0 !important; }
+      #root.mode-captions .layer:not(#captions) { opacity: 0 !important; }
+      .layer { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+      .abs { position: absolute; }
+      .emo { font-family: "Noto Color Emoji", sans-serif; line-height: 1; }
+      video.layer { object-fit: cover; }
+      #footage { z-index: 0; }
+      .bro { z-index: 1; }
+      section.layer { z-index: 2; }
+      #captions { z-index: 5; }
+
+      /* 胸前圖卡區：y 1115–1375（臉在 y 270–1100，不放東西） */
+      .panel { left: 50px; top: 1118px; width: 980px; height: 255px; border-radius: 44px;
+        background: rgba(255, 248, 241, .93); box-shadow: 0 10px 40px rgba(90, 67, 54, .25);
+        display: flex; align-items: center; justify-content: center; }
+      .by { position: absolute; left: 0; right: 0; top: 22px; text-align: center; font-size: 30px; font-weight: 700;
+        letter-spacing: .14em; color: var(--coral); }
+      .note { position: absolute; left: 0; right: 0; text-align: center; bottom: 8px; font-size: 28px; font-weight: 400; color: var(--mute); }
+      .soft { color: var(--coral); }
+
+      /* 標題 */
+      #t-title { font-size: 84px; font-weight: 900; line-height: 1.1; margin-top: 40px; white-space: nowrap; }
+      #t-title .emo { font-size: 76px; margin-right: 14px; vertical-align: -6px; }
+
+      /* 兩格小卡 */
+      .duo { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 26px; padding: 0 30px; }
+      .mini { width: 430px; height: 190px; border-radius: 34px; background: #fff; border: 3px solid var(--rose);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+      .mini .lab { font-size: 34px; font-weight: 700; color: var(--mute); white-space: nowrap; }
+      .mini .big { font-size: 64px; font-weight: 900; color: var(--ink); white-space: nowrap; line-height: 1.1; }
+      .mini .big b { color: var(--coral); font-size: 84px; }
+      .mini .big .emo { font-size: 56px; margin-right: 8px; }
+      .arrow { font-size: 60px; font-weight: 900; color: var(--coral); }
+
+      #s2-panel .duo { padding-bottom: 34px; } #s2-panel .mini { height: 172px; }
+      /* 挨餓 ✗ */
+      #s3-b { position: relative; }
+      #s3-x { position: absolute; left: 50%; top: 58%; width: 300px; height: 110px; margin: -40px 0 0 -150px; }
+      #s3-b.off .big, #s3-b.off .lab { color: rgba(90, 67, 54, .45); }
+
+      /* 循環 */
+      #s4-loop { font-size: 90px; color: var(--coral); }
+
+      /* CTA */
+      #cta { flex-direction: column; gap: 10px; }
+      #cta-main { font-size: 88px; font-weight: 900; white-space: nowrap; line-height: 1.1; }
+      #cta-main .emo { font-size: 78px; margin-right: 12px; vertical-align: -6px; }
+      #cta-sub { font-size: 52px; font-weight: 700; color: var(--coral); white-space: nowrap; }
+
+      /* 全螢幕實拍上的小標 */
+      .lbl { left: 50%; top: 250px; transform: translateX(-50%); padding: 14px 40px 18px; border-radius: 999px;
+        background: rgba(255, 248, 241, .92); font-size: 52px; font-weight: 900; white-space: nowrap;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, .25); }
+
+      /* 字幕：暖棕半透明底，一行；關鍵字橘黃 1.75 倍 */
+      #captions p { position: absolute; left: 540px; top: 1495px; transform: translate(-50%, -50%); opacity: 0;
+        padding: 10px 34px 16px; border-radius: 30px; background: rgba(74, 55, 44, .84); color: #fffaf4;
+        font-size: 64px; font-weight: 900; line-height: 1.2; white-space: nowrap; box-shadow: 0 0 30px rgba(74, 55, 44, .45); }
+      .kw { color: var(--kw); font-size: 1.75em; vertical-align: -0.08em; }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="mode-composite" data-composition-id="main" data-start="0" data-duration="39.05" data-width="1080" data-height="1920">
+
+      <video id="footage" class="clip layer" src="source.mp4" data-start="0" data-duration="39.05" data-track-index="0" data-has-audio="true" playsinline></video>
+
+      <!-- 全螢幕 Pixabay B-roll（已裁成 1080×1920、無聲） -->
+      <video id="v-friends" class="clip layer bro" src="bro-friends.mp4" data-start="9.22" data-duration="1.56" data-track-index="1" muted playsinline></video>
+      <video id="v-travel" class="clip layer bro" src="bro-travel.mp4" data-start="10.78" data-duration="0.88" data-track-index="1" muted playsinline></video>
+      <video id="v-work" class="clip layer bro" src="bro-work.mp4" data-start="11.66" data-duration="1.44" data-track-index="1" muted playsinline></video>
+      <video id="v-food" class="clip layer bro" src="bro-food.mp4" data-start="15.88" data-duration="4.22" data-track-index="1" muted playsinline></video>
+
+      <!-- S1 標題（0–4.04）：第 0 格就要看得到（縮圖） -->
+      <section id="s1" class="clip layer" data-start="0" data-duration="4.04" data-track-index="2">
+        <div id="s1-panel" class="abs panel">
+          <div class="by">宇姍教練</div>
+          <div id="t-title"><span class="emo">🍽️</span>飲控，<span class="soft">不用拒絕聚餐</span></div>
+        </div>
+      </section>
+
+      <!-- S2（4.04–9.22）：5 個月 16 公斤／出國 6 次 -->
+      <section id="s2" class="clip layer" data-start="4.04" data-duration="5.18" data-track-index="2">
+        <div id="s2-panel" class="abs panel">
+          <div class="duo">
+            <div id="s2-a" class="mini"><span class="lab">產後 5 個月</span><span class="big">瘦了 <b>16</b> 公斤</span></div>
+            <div id="s2-b" class="mini"><span class="lab">這中間還</span><span class="big"><span class="emo">✈️</span>出國 <b>6</b> 次</span></div>
+          </div>
+          <div id="s2-note" class="note">＊個人經驗分享</div>
+        </div>
+      </section>
+
+      <!-- C1 小標（9.22–13.10）：疊在實拍上 -->
+      <section id="c1" class="clip layer" data-start="9.22" data-duration="3.88" data-track-index="3">
+        <div id="c1-a" class="abs lbl">👭 朋友吃飯</div>
+        <div id="c1-b" class="abs lbl">✈️ 出國旅行</div>
+        <div id="c1-c" class="abs lbl">🥂 工作上的聚餐</div>
+      </section>
+
+      <!-- C2 小標（15.88–20.10） -->
+      <section id="c2" class="clip layer" data-start="15.88" data-duration="4.22" data-track-index="3">
+        <div id="c2-a" class="abs lbl">享受自己喜歡的<span class="soft">美食</span></div>
+      </section>
+
+      <!-- S3（20.10–25.64）：豐盛一餐 → 隔天挨餓 ✗ -->
+      <section id="s3" class="clip layer" data-start="20.1" data-duration="5.54" data-track-index="2">
+        <div id="s3-panel" class="abs panel">
+          <div class="duo">
+            <div id="s3-a" class="mini"><span class="lab">偶爾吃得</span><span class="big"><span class="emo">🍲</span>比較豐盛</span></div>
+            <div id="s3-arrow" class="arrow">→</div>
+            <div id="s3-b" class="mini"><span class="lab">隔天一定要</span><span class="big">挨餓</span>
+              <svg id="s3-x" viewBox="0 0 360 140"><path id="s3-x1" d="M120,20 L240,120" fill="none" stroke="#e58e78" stroke-width="14" stroke-linecap="round"/>
+                <path id="s3-x2" d="M240,20 L120,120" fill="none" stroke="#e58e78" stroke-width="14" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- S4（25.64–30.78）：回到日常 → 維持習慣 -->
+      <section id="s4" class="clip layer" data-start="25.64" data-duration="5.14" data-track-index="2">
+        <div id="s4-panel" class="abs panel">
+          <div class="duo">
+            <div id="s4-a" class="mini"><span class="lab">回到</span><span class="big"><span class="emo">🏠</span>平常生活</span></div>
+            <div id="s4-loop" class="emo">🔄</div>
+            <div id="s4-b" class="mini"><span class="lab">維持原本的</span><span class="big">習慣</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- S5 CTA（35.48–39.05） -->
+      <section id="s5" class="clip layer" data-start="35.48" data-duration="3.57" data-track-index="2">
+        <div id="cta" class="abs panel">
+          <div id="cta-main"><span class="emo">💌</span>私訊預約</div>
+          <div id="cta-sub">宇姍教練・一對一免費諮詢</div>
+        </div>
+      </section>
+
+      <!-- 字幕（prepare-composition.py 依 transcript.srt 與 project.json 產生） -->
+      <div id="captions" class="clip layer" data-start="0" data-duration="39.05" data-track-index="5">
+        <!-- CAPTIONS:BEGIN -->
+        <p data-s="0.00" data-e="1.62">我不會因為我在<span class="kw">飲控</span></p>
+        <p data-s="1.62" data-e="4.12">就拒絕朋友的<span class="kw">聚餐</span>邀請</p>
+        <p data-s="4.12" data-e="5.46">像我自己產後</p>
+        <p data-s="5.46" data-e="7.10">五個月瘦了<span class="kw">16公斤</span></p>
+        <p data-s="7.10" data-e="9.22">這中間我還出國了<span class="kw">六次</span></p>
+        <p data-s="9.22" data-e="11.66">不管是跟朋友吃飯、出國旅行</p>
+        <p data-s="11.66" data-e="13.10">還是工作上的<span class="kw">聚餐</span></p>
+        <p data-s="13.10" data-e="14.48">我都沒有因為<span class="kw">飲控</span></p>
+        <p data-s="14.48" data-e="15.88">就放棄這些生活</p>
+        <p data-s="15.88" data-e="17.82">我會正常參加<span class="kw">聚餐</span></p>
+        <p data-s="17.82" data-e="20.10">也會享受自己喜歡的<span class="kw">美食</span></p>
+        <p data-s="20.10" data-e="22.04">如果偶爾吃得比較<span class="kw">豐盛</span></p>
+        <p data-s="22.04" data-e="23.40">我也不會因為這一餐</p>
+        <p data-s="23.40" data-e="25.64">就要求自己隔天一定要<span class="kw">挨餓</span></p>
+        <p data-s="25.64" data-e="27.24">我更在意的是回到</p>
+        <p data-s="27.24" data-e="28.44">平常的生活之後</p>
+        <p data-s="28.44" data-e="30.78">能不能維持原本的<span class="kw">習慣</span></p>
+        <p data-s="30.78" data-e="33.32">因為我覺得真正好的<span class="kw">飲控</span>方式</p>
+        <p data-s="33.32" data-e="35.48">應該是能陪伴你<span class="kw">長期生活</span></p>
+        <p data-s="35.48" data-e="37.30">而不是為了讓你控制體重</p>
+        <p data-s="37.30" data-e="39.16">放棄你原本<span class="kw">喜歡的事情</span></p>
+        <!-- CAPTIONS:END -->
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const $ = (s) => document.querySelector(s);
+      const hide = (sel) => gsap.set(sel, { opacity: 0 });
+      const fadeUp = (s, t, d = 0.5) => tl.fromTo(s, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: d, ease: "power2.out" }, t);
+      const soft = (s, t) => tl.fromTo(s, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.4)" }, t);
+      const out = (s, t) => tl.to(s, { opacity: 0, duration: 0.3, ease: "none" }, t);
+      const float = (s, t, end) => {
+        const n = Math.max(1, Math.floor((end - t) / 1.6));
+        tl.to(s, { y: -6, duration: 0.8, ease: "sine.inOut", yoyo: true, repeat: n * 2 - 1 }, t);
+      };
+      // 時間都用原片秒數（storyboard/timing/words.json）
+
+      if (document.querySelector("section")) {
+        // S1 標題：第 0 格已完整顯示（縮圖），只做輕微浮動
+        float("#s1-panel", 0.2, 3.7);
+        out("#s1-panel", 3.74);
+
+        // S2：「產後」4.86、「16」6.30、「六次」8.60
+        hide(["#s2-panel", "#s2-a", "#s2-b", "#s2-note"]);
+        fadeUp("#s2-panel", 4.1);
+        soft("#s2-a", 4.86);
+        tl.fromTo("#s2-a b", { scale: 0.6 }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, 6.3);
+        tl.fromTo("#s2-note", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 5.0);
+        soft("#s2-b", 7.84);
+        tl.fromTo("#s2-b b", { scale: 0.6 }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, 8.6);
+        out("#s2-panel", 9.0);
+
+        // C1：朋友吃飯 9.22、出國旅行 10.78、工作聚餐 11.66（跟著實拍切換）
+        hide(["#c1-b", "#c1-c"]);
+        fadeUp("#c1-a", 9.22, 0.35);
+        tl.set("#c1-a", { opacity: 0 }, 10.78);
+        fadeUp("#c1-b", 10.78, 0.3);
+        tl.set("#c1-b", { opacity: 0 }, 11.66);
+        fadeUp("#c1-c", 11.66, 0.3);
+
+        // C2：「美食」19.40
+        hide("#c2-a");
+        fadeUp("#c2-a", 18.28);
+
+        // S3：「豐盛」21.36、「隔天」24.20、「挨餓」24.96
+        const xs = ["#s3-x1", "#s3-x2"].map($);
+        xs.forEach((p) => { const l = p.getTotalLength(); gsap.set(p, { attr: { "stroke-dasharray": l, "stroke-dashoffset": l } }); });
+        hide(["#s3-panel", "#s3-a", "#s3-arrow", "#s3-b"]);
+        fadeUp("#s3-panel", 20.15);
+        soft("#s3-a", 21.2);
+        tl.fromTo("#s3-arrow", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4 }, 23.9);
+        soft("#s3-b", 24.2);
+        xs.forEach((p, i) => tl.to(p, { attr: { "stroke-dashoffset": 0 }, duration: 0.25, ease: "power2.out" }, 24.96 + i * 0.2));
+        tl.to(["#s3-b .lab", "#s3-b .big"], { opacity: 0.45, duration: 0.3 }, 25.2);
+        out("#s3-panel", 25.34);
+
+        // S4：「回到」26.74、「維持」29.10、「習慣」30.22
+        hide(["#s4-panel", "#s4-a", "#s4-loop", "#s4-b"]);
+        fadeUp("#s4-panel", 25.7);
+        soft("#s4-a", 26.74);
+        tl.fromTo("#s4-loop", { opacity: 0, rotation: -180 }, { opacity: 1, rotation: 0, duration: 0.7, ease: "power2.out" }, 28.3);
+        soft("#s4-b", 29.1);
+        tl.to("#s4-loop", { rotation: 360, duration: 1.2, ease: "sine.inOut" }, 29.4);
+        out("#s4-panel", 30.48);
+
+        // S5 CTA
+        hide(["#cta", "#cta-sub"]);
+        fadeUp("#cta", 35.55);
+        fadeUp("#cta-sub", 36.2, 0.4);
+        tl.to("#cta-main", { scale: 1.04, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 3 }, 36.7);
+      }
+
+      // 字幕
+      document.querySelectorAll("#captions p").forEach((p) => {
+        tl.set(p, { opacity: 1 }, +p.dataset.s);
+        tl.set(p, { opacity: 0 }, Math.min(+p.dataset.e, 39.05));
+      });
+
+      tl.set({}, {}, 39.05);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
